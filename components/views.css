@@ -1,0 +1,241 @@
+/* ==========================================================================
+   VERTICAL GLASSLIKE TRANSACTION RECEIPT & BLURRED OVERLAY
+   ========================================================================== */
+
+/* Full-screen backdrop overlay with view blurring */
+#detailsModal.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 15, 30, 0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#detailsModal.modal-overlay.open {
+    display: flex;
+}
+
+/* Vertical rectangular glass card */
+.glass-receipt-card {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+    padding: 28px 24px;
+    color: #1e293b;
+    font-family: inherit;
+    display: flex;
+    flex-direction: column;
+    animation: glassPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes glassPopIn {
+    from { opacity: 0; transform: scale(0.92) translateY(12px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Top-right ( X ) Exit Button */
+.glass-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    background: rgba(0, 0, 0, 0.06);
+    border: none;
+    font-size: 22px;
+    line-height: 1;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.glass-close-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.receipt-header {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.receipt-logo {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: #0f172a;
+    text-transform: uppercase;
+}
+
+.receipt-subtitle {
+    font-size: 11px;
+    color: #64748b;
+    margin: 4px 0 10px 0;
+}
+
+.receipt-status-pill {
+    display: inline-block;
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.receipt-status-pill.status-confirmed,
+.receipt-status-pill.status-✓confirmed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.receipt-status-pill.status-cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.receipt-status-pill.status-pending {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.receipt-divider {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.08);
+    margin: 12px 0;
+}
+
+.receipt-divider.dashed {
+    background: none;
+    border-top: 1px dashed rgba(0, 0, 0, 0.15);
+}
+
+.receipt-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.receipt-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+}
+
+.receipt-row .label {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.receipt-row .value {
+    color: #0f172a;
+    font-weight: 600;
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+.receipt-row .value.highlight {
+    font-family: monospace;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    color: #2563eb;
+}
+
+.receipt-row.total-row {
+    margin-top: 4px;
+}
+
+.receipt-row.total-row .label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.receipt-row.total-row .value.amount {
+    font-size: 18px;
+    font-weight: 800;
+    color: #16a34a;
+}
+
+.receipt-footer {
+    margin-top: 16px;
+    text-align: center;
+}
+
+.receipt-footer p {
+    font-size: 10px;
+    color: #64748b;
+    margin-bottom: 10px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-print-receipt {
+    flex: 2;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-print-receipt:hover {
+    background: #1e293b;
+}
+
+/* Secondary Back Button */
+.btn-back-receipt {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.6);
+    color: #334155;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-back-receipt:hover {
+    background: #ffffff;
+    color: #0f172a;
+}
+
+@media print {
+    body * { visibility: hidden; }
+    .glass-receipt-card, .glass-receipt-card * { visibility: visible; }
+    .glass-receipt-card { position: absolute; left: 0; top: 0; width: 100%; max-width: 100%; }
+    .glass-close-btn, .modal-actions { display: none; }
+}

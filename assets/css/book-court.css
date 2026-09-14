@@ -1,0 +1,183 @@
+/*******************************************************************************
+ * SECTION 1: MAIN LAYOUT GRID & CONTAINERS
+ *******************************************************************************/
+
+/* Main two-column grid layout for the booking page */
+.booking-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    align-items: start;
+}
+
+/* Container utility override for the booking form */
+.booking-form-panel {
+    width: 100%;
+}
+
+
+/*******************************************************************************
+ * SECTION 2: OPEN PLAY SPECIFIC UTILITY STYLES
+ *******************************************************************************/
+
+/* Spacing wrapper for price calculations */
+.price-display-wrapper {
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+
+/* Dynamic price text styling */
+.price-display-value {
+    color: var(--color-primary, #2e7d32);
+    margin: 0;
+}
+
+/* Layout alignment for cancel links */
+.btn-cancel-link {
+    margin-top: 10px;
+    text-align: center;
+}
+
+
+/*******************************************************************************
+ * SECTION 3: SCHEDULE SIDE PANEL STYLING
+ *********************************--------------------------------**************/
+
+/* Main container for the live schedule sidebar */
+.schedule-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+}
+
+/* Header section inside the schedule panel */
+.schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.schedule-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #0f172a;
+}
+
+/* Date indicator badge */
+.schedule-date-badge {
+    font-size: 0.8rem;
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    color: #475569;
+}
+
+/* Fallback message when no schedule data exists */
+.schedule-empty-msg {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-style: italic;
+}
+
+
+/*******************************************************************************
+ * SECTION 4: INDIVIDUAL COURT CARDS & SLOTS
+ *********************************--------------------------------**************/
+
+/* Wrapper card for each court's scheduled slots */
+.court-schedule-card {
+    margin-bottom: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    background: #fafafa;
+}
+
+.court-schedule-card:last-child {
+    margin-bottom: 0;
+}
+
+/* Court title row */
+.court-title {
+    margin: 0 0 10px 0;
+    font-size: 0.95rem;
+    color: #1e293b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Active status text */
+.court-status-active {
+    font-size: 0.72rem;
+    color: #10b981;
+    font-weight: 600;
+}
+
+/* Availability message */
+.court-available-msg {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #10b981;
+    font-weight: 500;
+}
+
+/* Header label for booked slots list */
+.booked-slots-header {
+    margin-bottom: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+/* Individual reserved slot item */
+.slot-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+    background: #ffffff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    border-left: 3px solid #f59e0b;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.slot-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Status text formatting */
+.status-tag {
+    font-weight: 600;
+    text-transform: capitalize;
+    font-size: 0.75rem;
+}
+
+.status-tag.confirmed {
+    color: #059669;
+}
+
+.status-tag.pending {
+    color: #d97706;
+}
+
+
+/*******************************************************************************
+ * SECTION 5: RESPONSIVE MEDIA QUERIES
+ *********************************--------------------------------**************/
+
+/* Collapse grid layout into a single column on tablets and mobile devices */
+@media (max-width: 992px) {
+    .booking-grid-layout {
+        grid-template-columns: 1fr;
+    }
+}

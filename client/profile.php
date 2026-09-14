@@ -1,29 +1,41 @@
 <?php
+// =========================================================================
+// DEPENDENCIES & CORE INITIALIZATION
+// =========================================================================
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
+// PURPOSE: Enforce user login and redirect admin users 
+// away from client profile settings.
 requireLogin();
 if (isAdmin()) { redirect('../admin/dashboard.php'); }
 
+// Fetch current user details from the database
 $stmt = $pdo->prepare('SELECT * FROM users WHERE id = ?');
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch();
 
 $error = null;
 
+// =========================================================================
+// FORM SUBMISSION HANDLING (PROFILE & PASSWORD UPDATES)
+// =========================================================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name  = clean($_POST['full_name'] ?? '');
     $phone = clean($_POST['phone'] ?? '');
     $newPassword = $_POST['new_password'] ?? '';
 
+    // Validate name requirement
     if ($name === '') {
         $error = 'Name cannot be empty.';
     } else {
+        // Update user's general profile information (Name and Phone)
         $stmt = $pdo->prepare('UPDATE users SET full_name = ?, phone = ? WHERE id = ?');
         $stmt->execute([$name, $phone, $_SESSION['user_id']]);
         $_SESSION['full_name'] = $name;
 
+        // Process optional password change if a new password is provided
         if ($newPassword !== '') {
             if (strlen($newPassword) < 6) {
                 $error = 'New password must be at least 6 characters.';
@@ -34,11 +46,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // If no errors occurred during execution, set success message and redirect
         if (!$error) {
             setFlash('success', 'Profile updated.');
             redirect('profile.php');
         }
     }
+    
+    // Retain submitted values in memory if validation fails so fields stay populated
     $user['full_name'] = $name;
     $user['phone'] = $phone;
 }
@@ -57,9 +72,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <main class="dash-main">
         <div class="dash-topbar"><h1>My Profile</h1></div>
 
+        <!-- Flash and Error Notification Banners -->
         <?php if ($msg = getFlash('success')): ?><div class="alert alert-success"><?= e($msg) ?></div><?php endif; ?>
         <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
 
+        <!-- ======================================================= -->
+        <!-- PROFILE EDIT FORM PANEL                                 -->
+        <!-- ======================================================= -->
         <div class="panel-card" style="max-width:520px">
             <form method="post">
                 <div class="field">
@@ -83,5 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </main>
 </div>
+
+<a href="../index.php" class="btn-back-home">Back to Home</a>
+
 </body>
 </html>

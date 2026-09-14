@@ -1,4 +1,7 @@
 <?php
+/*******************************************************************************
+ * SECTION 1: CONNECT TO THE DATABASE, LOAD HELPERS, AND CHECK ADMIN ACCESS
+ *******************************************************************************/
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
@@ -6,6 +9,10 @@ require_once __DIR__ . '/../includes/booking-functions.php';
 
 requireAdmin();
 
+
+/*******************************************************************************
+ * SECTION 2: FETCH DASHBOARD STATISTICS AND RECENT BOOKING REQUESTS
+ *******************************************************************************/
 $stats = getAdminStats($pdo);
 $recent = array_slice(getAllBookings($pdo), 0, 6);
 ?>
@@ -19,13 +26,23 @@ $recent = array_slice(getAllBookings($pdo), 0, 6);
 </head>
 <body>
 <div class="dash-shell">
-    <?php include __DIR__ . '/../components/admin-sidebar.php'; ?>
+    <?php 
+    /***************************************************************************
+     * SECTION 3: LOAD THE ADMIN SIDEBAR NAVIGATION MENU
+     ***************************************************************************/
+    include __DIR__ . '/../components/admin-sidebar.php'; 
+    ?>
     <main class="dash-main">
         <div class="dash-topbar">
             <h1>Admin Dashboard</h1>
             <div class="who"><?= e($_SESSION['full_name']) ?></div>
         </div>
 
+        <?php 
+        /*******************************************************************
+         * SECTION 4: DISPLAY QUICK OVERVIEW STAT CARDS (NUMBERS)
+         *******************************************************************/
+        ?>
         <div class="stat-cards">
             <div class="stat-card"><div class="n"><?= $stats['clients'] ?></div><div class="l">Total Clients</div></div>
             <div class="stat-card"><div class="n"><?= $stats['courts'] ?></div><div class="l">Courts</div></div>
@@ -33,6 +50,11 @@ $recent = array_slice(getAllBookings($pdo), 0, 6);
             <div class="stat-card"><div class="n"><?= $stats['today'] ?></div><div class="l">Bookings Today</div></div>
         </div>
 
+        <?php 
+        /*******************************************************************
+         * SECTION 5: SHOW RECENT BOOKING REQUESTS IN A TABLE
+         *******************************************************************/
+        ?>
         <div class="panel-card">
             <h2>Recent Booking Requests</h2>
             <?php if ($recent): ?>
@@ -45,7 +67,21 @@ $recent = array_slice(getAllBookings($pdo), 0, 6);
                             <td><?= formatDate($b['booking_date']) ?></td>
                             <td><?= e($b['court_name']) ?></td>
                             <td><?= $b['booking_type'] === 'open_play' ? 'Open Play' : 'Private' ?></td>
-                            <td><span class="<?= statusBadgeClass($b['status']) ?>"><?= ucfirst($b['status']) ?></span></td>
+
+                            <td>
+                                <?php if ($b['status'] === 'confirmed'): ?>
+                                    <span class="badge badge-confirmed">✓ Confirmed</span>
+                                <?php elseif ($b['status'] === 'pending'): ?>
+                                    <span class="badge badge-pending">Pending</span>
+                                <?php elseif ($b['status'] === 'pending_cancellation' || $b['status'] === 'pending-cancellation'): ?>
+                                    <span class="badge status-pending_cancellation">Pending Cancellation</span>
+                                <?php elseif ($b['status'] === 'cancelled'): ?>
+                                    <span class="badge badge-cancelled">Cancelled</span>
+                                <?php else: ?>
+                                    <span class="badge" style="background:#fee2e2; color:#b91c1c;"><?= e($b['status'] !== '' ? $b['status'] : 'NULL / Empty') ?></span>
+                                <?php endif; ?>
+                            </td>
+                            
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
@@ -57,5 +93,9 @@ $recent = array_slice(getAllBookings($pdo), 0, 6);
         </div>
     </main>
 </div>
+
+<!-- Floating Back to Home Button -->
+<a href="../index.php" class="btn-back-home">Back to Home</a>
+
 </body>
 </html>

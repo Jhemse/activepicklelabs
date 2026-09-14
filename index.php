@@ -1,13 +1,37 @@
 <?php
+// =========================================================================
+// DEPENDENCY INCLUSION & CORE INITIALIZATION
+// =========================================================================
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/helpers.php';
 require_once __DIR__ . '/includes/booking-functions.php';
 
+// Fetch global site settings and service listings
 $settings   = getSettings($pdo);
 $services   = getAllServices($pdo);
-$openPlay   = getUpcomingOpenPlay($pdo, 3);
 $serviceBg  = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
+
+// Fetch site images from database for homepage cards
+$siteImages = [];
+try {
+    $imgStmt = $pdo->query("SELECT section_key, image_path FROM site_images");
+    while ($row = $imgStmt->fetch()) {
+        $siteImages[$row['section_key']] = $row['image_path'];
+    }
+} catch (Exception $e) {
+    // Handle exception gracefully
+}
+
+// Fetch upcoming admin-hosted open play sessions (same data query as client/dashboard.php)
+$upcomingOpenPlay = $pdo->query("
+    SELECT ops.*, c.court_name, 
+           (SELECT COALESCE(SUM(num_players), 0) FROM open_play_registrations WHERE session_id = ops.id AND status = 'confirmed') as confirmed_players 
+    FROM open_play_sessions ops 
+    JOIN courts c ON ops.court_id = c.id 
+    WHERE ops.session_date >= CURDATE() AND ops.status = 'open'
+    ORDER BY ops.session_date ASC, ops.start_time ASC
+")->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -15,10 +39,13 @@ $serviceBg  = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= e($settings['site_name'] ?? 'Active Picklelabs') ?> - Court Booking &amp; Training</title>
-<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="stylesheet" href="assets/css/styles.css?v=1.0">
 </head>
 <body>
 
+<!-- ========================================================================= -->
+<!-- HERO SECTION & PUBLIC NAVIGATION                                        -->
+<!-- ========================================================================= -->
 <div class="hero" id="home">
     <?php include __DIR__ . '/components/public-navbar.php'; ?>
 
@@ -42,14 +69,28 @@ $serviceBg  = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
     <div class="hero-ghost">ACTIVE PICKLELABS</div>
 </div>
 
+
+<!-- ========================================================================= -->
+<!-- ========================================================================= -->
+<!-- FEATURE HIGHLIGHT STRIP                                                   -->
+<!-- ========================================================================= -->
 <div class="feature-row">
     <div class="feature-grid">
-        <div class="feature-card f1"><span>Trusted<br>Quality Club</span></div>
-        <div class="feature-card f2"><span>Top Rated<br>Pickleball Players</span></div>
-        <div class="feature-card f3"><span>Always<br>Flexible Access</span></div>
+        <div class="feature-card f1" style="<?php echo !empty($siteImages['card_trusted']) ? "background-image: url('" . e($siteImages['card_trusted']) . "'); background-size: cover; background-position: center;" : ''; ?>">
+            <span>Trusted<br>Quality Club</span>
+        </div>
+        <div class="feature-card f2" style="<?php echo !empty($siteImages['card_rated']) ? "background-image: url('" . e($siteImages['card_rated']) . "'); background-size: cover; background-position: center;" : ''; ?>">
+            <span>Top Rated<br>Pickleball Players</span>
+        </div>
+        <div class="feature-card f3" style="<?php echo !empty($siteImages['card_flexible']) ? "background-image: url('" . e($siteImages['card_flexible']) . "'); background-size: cover; background-position: center;" : ''; ?>">
+            <span>Always<br>Flexible Access</span>
+        </div>
     </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- ABOUT SECTION & STATISTICS                                                -->
+<!-- ========================================================================= -->
 <section class="section" id="about">
     <div class="section-grid">
         <div>
@@ -84,6 +125,9 @@ $serviceBg  = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
     </div>
 </section>
 
+<!-- ========================================================================= -->
+<!-- SERVICES SECTION                                                          -->
+<!-- ========================================================================= -->
 <section class="section" id="services" style="background:var(--paper)">
     <div class="services-wrap">
         <div>
@@ -93,7 +137,12 @@ $serviceBg  = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
         </div>
         <div class="services-grid">
             <?php foreach ($services as $i => $s): ?>
-                <div class="service-card <?= $serviceBg[$i % count($serviceBg)] ?>">
+                <?php 
+                    $hasImg = !empty($s['image_url']);
+                    $cardStyle = $hasImg ? "style=\"background: url('" . e($s['image_url']) . "') center/cover no-repeat;\"" : '';
+                    $fallbackBg = !$hasImg ? $serviceBg[$i % count($serviceBg)] : '';
+                ?>
+                <div class="service-card <?= $fallbackBg ?>" <?= $cardStyle ?>>
                     <div class="sc-icon">&#9679;</div>
                     <h3><?= e($s['title']) ?></h3>
                 </div>
@@ -102,6 +151,9 @@ $serviceBg  = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
     </div>
 </section>
 
+<!-- ========================================================================= -->
+<!-- COURTS & BOOKING SECTION                                                  -->
+<!-- ========================================================================= -->
 <section class="section" id="booking">
     <div class="booking-panel">
         <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px">
@@ -111,7 +163,6 @@ $serviceBg  = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
         <div class="booking-grid">
             <div class="booking-actions">
                 <a class="btn btn-navy" href="<?= isLoggedIn() ? 'client/book-court.php' : 'register.php' ?>">Book My Own Court</a>
-                <a class="btn btn-navy" href="<?= isLoggedIn() ? 'client/book-court.php?type=open_play' : 'register.php' ?>">Join Open Play</a>
                 <div class="court-diagram">
                     <!-- Left Court Half -->
                     <div class="court-left">
@@ -132,18 +183,27 @@ $serviceBg  = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
                 </div>
             </div>
             <div>
-                <h3 style="margin-bottom:16px">Upcoming Courts</h3>
+                <h3 style="margin-bottom:16px">UPCOMING COURTS</h3>
                 <div class="upcoming-list">
-                    <?php if ($openPlay): ?>
-                        <?php foreach ($openPlay as $i => $b): ?>
+                    <?php if (empty($upcomingOpenPlay)): ?>
+                        <div class="upcoming-item">
+                            <span class="info muted">No open play sessions currently scheduled by admin.</span>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($upcomingOpenPlay as $index => $session): 
+                            $remainingSlots = $session['max_slots'] - $session['confirmed_players'];
+                            if ($remainingSlots <= 0) continue;
+                        ?>
                             <div class="upcoming-item">
-                                <span class="num"><?= $i + 1 ?></span>
-                                <span class="info"><strong><?= formatDate($b['booking_date']) ?>, <?= formatTime($b['start_time']) ?>-<?= formatTime($b['end_time']) ?></strong> | <?= e($b['court_name']) ?></span>
-                                <a class="btn btn-lime btn-sm" href="<?= isLoggedIn() ? 'client/book-court.php' : 'register.php' ?>">Join Open Play</a>
+                                <span class="num"><?= $index + 1 ?></span>
+                                <span class="info">
+                                    <strong>
+                                        <?= date('M j, Y', strtotime($session['session_date'])) ?>, 
+                                        <?= date('g:i A', strtotime($session['start_time'])) ?>–<?= date('g:i A', strtotime($session['end_time'])) ?>
+                                    </strong> | <?= e($session['court_name']) ?>
+                                </span>
                             </div>
                         <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="upcoming-item"><span class="info muted">No open play sessions scheduled yet — be the first to book one!</span></div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -151,33 +211,40 @@ $serviceBg  = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
     </div>
 </section>
 
+<!-- ========================================================================= -->
+<!-- CONTACT SECTION & MAP EMBED                                               -->
+<!-- ========================================================================= -->
 <section class="section" id="contact" style="background:var(--paper)">
-    <span class="pill-label container" style="display:inline-block;margin-left:24px">Contact</span>
     <div class="container">
+        <span class="pill-label">Contact</span>
         <h2>Reach us for court bookings</h2>
-    </div>
-    <div class="contact-grid" style="margin-top:30px">
-        <div class="contact-cards">
-            <div class="contact-card">
-                <div class="contact-icon">@</div>
-                <div><small>Email</small><strong><?= e($settings['email'] ?? '') ?></strong></div>
+
+        <div class="contact-grid" style="margin-top:30px">
+            <div class="contact-cards">
+                <div class="contact-card">
+                    <div class="contact-icon">@</div>
+                    <div><small>Email</small><strong><?= e($settings['email'] ?? '') ?></strong></div>
+                </div>
+                <div class="contact-card">
+                    <div class="contact-icon">IG</div>
+                    <div><small>Instagram</small><strong><?= e($settings['instagram'] ?? '') ?></strong></div>
+                </div>
+                <div class="contact-card">
+                    <div class="contact-icon">&#9742;</div>
+                    <div><small>Phone</small><strong><?= e($settings['phone'] ?? '') ?></strong></div>
+                </div>
             </div>
-            <div class="contact-card">
-                <div class="contact-icon">IG</div>
-                <div><small>Instagram</small><strong><?= e($settings['instagram'] ?? '') ?></strong></div>
+          <div class="contact-photo" style="<?php echo !empty($siteImages['contact_photo']) ? "background-image: url('" . e($siteImages['contact_photo']) . "'); background-size: cover; background-position: center;" : ''; ?>"></div>
+            <div class="map-embed">
+                <iframe src="https://maps.google.com/maps?q=<?= urlencode($settings['address'] ?? 'pickleball court') ?>&output=embed" loading="lazy"></iframe>
             </div>
-            <div class="contact-card">
-                <div class="contact-icon">&#9742;</div>
-                <div><small>Phone</small><strong><?= e($settings['phone'] ?? '') ?></strong></div>
-            </div>
-        </div>
-        <div class="contact-photo"></div>
-        <div class="map-embed">
-            <iframe src="https://maps.google.com/maps?q=<?= urlencode($settings['address'] ?? 'pickleball court') ?>&output=embed" loading="lazy"></iframe>
         </div>
     </div>
 </section>
 
+<!-- ========================================================================= -->
+<!-- FOOTER & SCRIPT INCLUSIONS                                              -->
+<!-- ========================================================================= -->
 <?php include __DIR__ . '/components/footer.php'; ?>
 
 <script src="assets/js/main.js"></script>

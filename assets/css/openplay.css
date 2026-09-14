@@ -1,0 +1,351 @@
+/*******************************************************************************
+ * SECTION 1: VIEWPORT LOCK & DASHBOARD SHELL LAYOUT
+ *******************************************************************************/
+
+/* Forces full viewport locking and prevents root body scrolling */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden !important;
+}
+
+/* Main flex container locking the screen layout */
+.dash-shell {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+
+/*******************************************************************************
+ * SECTION 2: SIDEBAR & MAIN CONTENT CONTAINERS
+ *******************************************************************************/
+
+/* Sidebar fixed height with vertical scrolling if needed */
+.dash-sidebar {
+    height: 100vh;
+    flex-shrink: 0;
+    overflow-y: auto;
+}
+
+/* Primary application viewport container with custom scrolling */
+.dash-main {
+    flex: 1;
+    height: 100vh;
+    overflow-y: auto !important;
+    padding: 30px;
+    box-sizing: border-box;
+    display: block !important;
+}
+
+/* Custom smooth scrollbar styling for the main content area */
+.dash-main::-webkit-scrollbar,
+main::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dash-main::-webkit-scrollbar-track,
+main::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dash-main::-webkit-scrollbar-thumb,
+main::-webkit-scrollbar-thumb {
+    background: rgba(203, 213, 225, 0.6);
+    border-radius: 9999px;
+}
+
+.dash-main::-webkit-scrollbar-thumb:hover,
+main::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.8);
+}
+
+
+/*******************************************************************************
+ * SECTION 3: CARD OVERRIDES & FORM GRID STYLING
+ *********************************--------------------------------**************/
+
+/* Override absolute positioning constraints across dashboard card elements */
+.dash-main > *,
+.dash-main .panel-card {
+    position: static !important;
+    float: none !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin-top: 0 !important;
+    margin-bottom: 24px !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    transform: none !important;
+}
+
+/* Constrain the primary form card width */
+.dash-main .panel-card:first-of-type {
+    max-width: 600px !important;
+}
+
+/* Two-column administrative form grid layout */
+.form-grid-2col {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+    margin-bottom: 20px !important;
+}
+
+.form-grid-2col .field-full {
+    grid-column: span 2 !important;
+}
+
+.form-grid-2col .field {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+}
+
+.form-grid-2col label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.form-grid-2col input,
+.form-grid-2col select {
+    width: 100% !important;
+    padding: 10px 12px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    font-size: 0.9rem !important;
+    box-sizing: border-box !important;
+}
+
+
+/*******************************************************************************
+ * SECTION 4: TABLE STYLING
+ *********************************--------------------------------**************/
+
+/* Standardized dashboard data table layout */
+.dash-main table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-top: 16px !important;
+}
+
+.dash-main th,
+.dash-main td {
+    padding: 12px 16px !important;
+    text-align: left !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.dash-main th {
+    background-color: #f8fafc !important;
+    color: #64748b !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+}
+
+
+/*******************************************************************************
+ * SECTION 5: BUTTONS & ACTION CONTROLS
+ *********************************--------------------------------**************/
+
+/* Destructive action text button styling */
+.dash-main .btn-text.text-danger {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0;
+}
+
+/* Primary action text button styling */
+.dash-main .btn-text.text-primary,
+.btn-text.text-primary {
+    background: none;
+    border: none;
+    color: #2563eb;
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0;
+}
+
+/* Flexible container for inline row buttons */
+.action-flex {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+}
+
+
+/*******************************************************************************
+ * SECTION 6: MODAL & GLASSMORPHISM STYLING
+ *********************************--------------------------------**************/
+
+/* Fullscreen backdrop blur container for interactive popups */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 9999;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Frosted glass popup container */
+.glass-modal {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 480px;
+    padding: 28px;
+    box-sizing: border-box;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: 0.02em;
+}
+
+.btn-close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: #64748b;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.glass-modal .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.glass-modal label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.glass-modal input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+.full-width {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+
+/*******************************************************************************
+ * SECTION 7: SIDEBAR LOGO & COMPONENT STYLING
+ *********************************--------------------------------**************/
+
+
+
+/*******************************************************************************
+ * SECTION 8: ADMIN UTILITY CLASSES & HEADER ROW LAYOUTS
+ *********************************--------------------------------**************/
+
+/* Solid primary action button formatting */
+.btn.btn-solid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-right: 10px;
+}
+
+/* Page header row formatting for admin listings */
+.admin-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.admin-header-row h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    white-space: nowrap;
+}
+
+#openAddServiceModal {
+    flex-shrink: 0;
+}
+
+/* Text alignment and typography helpers */
+.text-right {
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.fw-semibold {
+    font-weight: 600;
+}
+
+/* Image thumbnail layout for table items */
+.table-img-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* Field helper hint text */
+.field-hint {
+    color: #64748b;
+    display: block;
+    margin-top: 4px;
+    font-size: 0.85rem;
+}

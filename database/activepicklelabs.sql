@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS services (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(100) NOT NULL,
     description VARCHAR(255) DEFAULT NULL,
+    image_url VARCHAR(255) DEFAULT NULL,
     icon VARCHAR(40) DEFAULT 'sparkle',
     display_order INT NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -65,6 +66,37 @@ CREATE TABLE IF NOT EXISTS bookings (
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------
+-- Open Play Sessions (Hosted by Admin)
+-- ---------------------------------------------------------
+CREATE TABLE IF NOT EXISTS open_play_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    court_id INT NOT NULL,
+    session_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    max_slots INT NOT NULL DEFAULT 8,
+    price_per_player DECIMAL(10,2) NOT NULL DEFAULT 150.00,
+    status ENUM('open', 'full', 'cancelled') DEFAULT 'open',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_open_play_court FOREIGN KEY (court_id) REFERENCES courts(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------
+-- Open Play Registrations (User Requests to Join Open Play)
+-- ---------------------------------------------------------
+CREATE TABLE IF NOT EXISTS open_play_registrations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    session_id INT NOT NULL,
+    user_id INT NOT NULL,
+    num_players INT NOT NULL DEFAULT 1,
+    total_price DECIMAL(10,2) NOT NULL,
+    status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_registration_session FOREIGN KEY (session_id) REFERENCES open_play_sessions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_registration_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------
 -- Site settings (single row, edited from admin/settings.php)
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS settings (
@@ -81,14 +113,6 @@ INSERT INTO settings (id, site_name, tagline, email, phone, instagram, address)
 VALUES (1, 'Active Picklelabs', 'The Picklelab That Gives You Ultimate Experience',
         'info@activepicklelabs.com', '+0936-345-5567', 'ActivePicklelabs', 'Downtown Sports Complex')
 ON DUPLICATE KEY UPDATE site_name = VALUES(site_name);
-
--- ---------------------------------------------------------
--- Default admin account is NOT seeded here, because a bcrypt hash
--- typed into an SQL file can't be guaranteed to match a real password.
--- After importing this file, open database/create_admin.php ONCE in your
--- browser to create the first admin account with a properly hashed
--- password, then delete that file for security.
--- ---------------------------------------------------------
 
 -- ---------------------------------------------------------
 -- Seed courts

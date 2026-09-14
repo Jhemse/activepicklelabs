@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1920.35 1080">
+  <!-- Generator: Adobe Illustrator 29.8.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 2)  -->
+  <defs>
+    <style>
+      .st0 {
+        font-family: ErasITC-Bold, 'Eras Bold ITC';
+        font-size: 70.82px;
+        font-weight: 700;
+      }
+
+      .st1, .st2 {
+        fill: #0b033c;
+      }
+
+      .st3 {
+        fill: #231f20;
+      }
+
+      .st2 {
+        stroke: #fff01e;
+      }
+
+      .st2, .st4, .st5 {
+        stroke-miterlimit: 10;
+      }
+
+      .st4 {
+        stroke: #0b033c;
+        stroke-width: .5px;
+      }
+
+      .st4, .st5 {
+        fill: #fff01e;
+      }
+
+      .st5 {
+        stroke: #000053;
+        stroke-width: .25px;
+      }
+    </style>
+  </defs>
+  <text class="st0" transform="translate(816.33 527.68) scale(1.11 1)"><tspan class="st4"><tspan x="0" y="0">Active</tspan></tspan><tspan class="st3"><tspan x="0" y="56.83">Picklelabs</tspan></tspan></text>
+  <ellipse class="st5" cx="1112.62" cy="540.23" rx=".9" ry="1.84" transform="translate(-111.48 363.19) rotate(-17.67)"/>
+  <ellipse class="st5" cx="1115.34" cy="521.83" rx="1.84" ry=".72" transform="translate(2.69 1049.36) rotate(-50.44)"/>
+  <g>
+    <path class="st1" d="M814.62,608.94l-84.88.1c-.86,0-1.59-.64-1.7-1.49l-11.8-91.2-11.8,91.21c-.11.85-.83,1.49-1.69,1.49l-82.84.52c-1.47,0-2.27-1.72-1.3-2.83l43.36-49.98c.48-.55,1.25-.75,1.92-.47,3.87,1.6,8.15,2.41,12.64,2.21,14.95-.66,27.23-12.64,28.2-27.58.99-15.13-9.39-28.02-23.43-30.97-1.15-.24-1.74-1.51-1.15-2.53l34.16-59.17c.66-1.14,2.3-1.14,2.96,0l45.09,78.09,53.73,90c.68,1.14-.14,2.59-1.47,2.59Z"/>
+    <path class="st2" d="M704.54,439.07l-38.82,60.66c-11.86,4.59-17.85,14.12-19.46,22.29-2.5,12.64,2.43,22,7.48,27.31l-3.78,4.34-46.17,55.28c-.9,1.07-2.57-.07-1.9-1.29l31.25-57.16-19.78-6.49,12.93-16.05,76.18-90.41c1.04-1.24,2.96.17,2.09,1.54Z"/>
+    <ellipse class="st5" cx="685.18" cy="510.52" rx=".84" ry="1.84" transform="translate(-71.28 907.85) rotate(-64.4)"/>
+    <ellipse class="st5" cx="694.33" cy="522.85" rx="1.14" ry="1.84" transform="translate(-129.49 245.75) rotate(-18.39)"/>
+    <ellipse class="st5" cx="692.96" cy="540.54" rx="1.84" ry=".84" transform="translate(-149.2 791.83) rotate(-54.57)"/>
+    <ellipse class="st5" cx="655.62" cy="534.18" rx=".9" ry="1.84" transform="translate(-131.21 224.19) rotate(-17.67)"/>
+    <ellipse class="st5" cx="682.24" cy="549.35" rx="1.84" ry=".79" transform="translate(-143.81 258.01) rotate(-19.41)"/>
+    <ellipse class="st5" cx="665.65" cy="548.57" rx=".59" ry="1.84" transform="translate(-106.36 933.29) rotate(-65.98)"/>
+    <ellipse class="st5" cx="669.9" cy="508.89" rx="1.95" ry=".72" transform="translate(-122.24 225.59) rotate(-17.54)"/>
+    <ellipse class="st5" cx="658.34" cy="515.79" rx="1.84" ry=".72" transform="translate(-158.6 694.84) rotate(-50.44)"/>
+    <ellipse class="st5" cx="670.91" cy="515.91" rx="1.84" ry="1.27" transform="translate(-174.12 562.83) rotate(-40.74)"/>
+    <ellipse class="st5" cx="661.77" cy="525.96" rx="1.76" ry="1.39" transform="translate(-54.09 975.52) rotate(-70.61)"/>
+    <ellipse class="st5" cx="682.86" cy="519.45" rx="1.36" ry="1.71" transform="translate(-152.52 715.07) rotate(-50.44)"/>
+    <ellipse class="st5" cx="678.25" cy="541.78" rx="1.84" ry="1.42" transform="translate(-39.84 54.04) rotate(-4.43)"/>
+    <circle class="st5" cx="670.91" cy="525.67" r="1.84"/>
+    <ellipse class="st5" cx="679.34" cy="530.74" rx="1.84" ry="1.74" transform="translate(-162.5 716.46) rotate(-50.44)"/>
+    <ellipse class="st5" cx="665.57" cy="536.54" rx="1.48" ry="1.84" transform="translate(-188.88 564.34) rotate(-40.74)"/>
+    <ellipse class="st5" cx="688.79" cy="531.17" rx="1.79" ry="1.53" transform="translate(-40.96 1004.5) rotate(-70.61)"/>
+  </g>
+</svg>
