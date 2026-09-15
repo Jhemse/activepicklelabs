@@ -59,3 +59,23 @@ $siteName = $settings['site_name'] ?? 'Active Picklelabs';
         <span>Terms of Use | Privacy Policy | Cookie Policy</span>
     </div>
 </footer>
+
+<!-- Navbar Smart Scroll Hide/Show Script -->
+<script>
+let lastScrollTop = 0;
+const header = document.querySelector('.site-header');
+const scrollThreshold = 50;
+
+window.addEventListener('scroll', function() {
+    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    
+    if (header) {
+        if (scrollTop > lastScrollTop && scrollTop > scrollThreshold) {
+            header.classList.add('nav-hidden');
+        } else {
+            header.classList.remove('nav-hidden');
+        }
+    }
+    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+}, { passive: true });
+</script>

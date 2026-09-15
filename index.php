@@ -49,12 +49,12 @@ $upcomingOpenPlay = $pdo->query("
 <div class="hero" id="home">
     <?php include __DIR__ . '/components/public-navbar.php'; ?>
 
-    <div class="container hero-inner">
+<div class="container hero-inner">
         <div>
             <span class="eyebrow-pill">Play Pickleball</span>
             <h1 class="hero-title">The Picklelab That Gives You Ultimate Experience</h1>
             <p class="hero-lede"><?= e($settings['tagline'] ?? '') ?> Be part of the club and let us show you the true nature of being active.</p>
-            <div style="margin-top:26px" class="nav-actions">
+            <div style="margin-top:26px" class="hero-cta">
                 <a class="btn btn-solid" href="<?= isLoggedIn() ? 'client/book-court.php' : 'register.php' ?>">Book a Court</a>
                 <a class="btn btn-outline" href="#about">Learn More</a>
             </div>

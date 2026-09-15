@@ -97,15 +97,59 @@ ul { margin: 0; padding: 0; list-style: none; }
     --logo-scale-height: 90px;  /* Visual oversized height of the logo image */
 }
 
+
+
 /* Header Outer Container */
+/* Expanded Dark Blue Navigation Header */
+/* Full-width Dark Blue Sticky Navigation Bar */
 .site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    display: flex;
-    justify-content: center;
-   padding-top: 30px;
-    position: relative;
-    z-index: 100;
+    z-index: 1000;
+    background-color: var(--navy-900, #0c1427);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease-in-out;
 }
+
+/* Header inner layout matching your hero content alignment */
+.site-header .nav-wrap {
+    height: 80px;
+    left: 50px;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 70px; /* Matches the left offset of your hero content block */
+}
+
+/* Shifts the main navigation links slightly toward the left */
+.site-header .main-nav {
+    margin-right: auto; /* Pushes everything after the logo (links and actions) to fill available space toward the left */
+    margin-left: 160px;  /* Adjust this spacing gap between the logo and your "Home" link */
+}
+
+
+
+/* Constrain the logo size so it fits neatly inside the header height */
+.site-header .brand-logo-img {
+    height: 270px;
+    width: auto;
+    object-fit: contain;
+}
+
+.site-header.nav-hidden {
+    transform: translateY(-100%);
+}
+
+.hero {
+    padding-top: 100px; 
+}
+
+
+
 
 /* Header Inner Centered Wrapper */
 .nav-wrap {
@@ -185,9 +229,22 @@ ul { margin: 0; padding: 0; list-style: none; }
 .nav-actions {
     display: flex;
     align-items: center;
+    position: relative; /* Required for 'right' to work */
+    right: 80px;       /* Pushes it 60px to the right */
     gap: 12px;
-    flex-shrink: 0; /* Ensures buttons never shrink or get cut off */
+    flex-shrink: 0; 
 }
+
+
+/* This targets ONLY the button group inside the hero section */
+.hero .nav-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 26px;
+    /* Add any custom positioning or sizing here */
+}
+
+
 
 .nav-toggle {
     display: none !important;
