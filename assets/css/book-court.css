@@ -1,183 +1,102 @@
-/*******************************************************************************
- * SECTION 1: MAIN LAYOUT GRID & CONTAINERS
- *******************************************************************************/
-
-/* Main two-column grid layout for the booking page */
+/* Layout changes from full-width to 2-columns when a court is selected */
 .booking-grid-layout {
     display: grid;
-    grid-template-columns: 1fr 380px;
-    gap: 24px;
-    align-items: start;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    transition: all 0.3s ease;
 }
 
-/* Container utility override for the booking form */
-.booking-form-panel {
-    width: 100%;
+.booking-grid-layout.court-selected {
+    grid-template-columns: 380px 1fr; /* Left column fixed compact width for court & schedule */
 }
 
-
-/*******************************************************************************
- * SECTION 2: OPEN PLAY SPECIFIC UTILITY STYLES
- *******************************************************************************/
-
-/* Spacing wrapper for price calculations */
-.price-display-wrapper {
-    margin-top: 15px;
-    margin-bottom: 20px;
-}
-
-/* Dynamic price text styling */
-.price-display-value {
-    color: var(--color-primary, #2e7d32);
-    margin: 0;
-}
-
-/* Layout alignment for cancel links */
-.btn-cancel-link {
-    margin-top: 10px;
-    text-align: center;
-}
-
-
-/*******************************************************************************
- * SECTION 3: SCHEDULE SIDE PANEL STYLING
- *********************************--------------------------------**************/
-
-/* Main container for the live schedule sidebar */
-.schedule-panel {
+/* Fixed: Change from display: none to visibility/opacity management so inner contents render properly */
+#bookingConfigPanel {
+    display: none;
     background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e2e8f0;
+    height: fit-content;
 }
 
-/* Header section inside the schedule panel */
-.schedule-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #f1f5f9;
+#bookingConfigPanel.visible {
+    display: block; /* Ensures elements render fully */
 }
 
-.schedule-header h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: #0f172a;
+/* Hidden by default on page load - styled for vertical alignment */
+#todayScheduleVertical {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-/* Date indicator badge */
-.schedule-date-badge {
-    font-size: 0.8rem;
-    background: #f1f5f9;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-weight: 600;
-    color: #475569;
+#todayScheduleVertical.visible {
+    display: block;
+    opacity: 1;
 }
 
-/* Fallback message when no schedule data exists */
-.schedule-empty-msg {
-    font-size: 0.85rem;
-    color: #64748b;
-    font-style: italic;
+/* Court selection grid management (Max 3 columns per row with vertical scroll) */
+.court-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    max-height: 520px;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
-
-/*******************************************************************************
- * SECTION 4: INDIVIDUAL COURT CARDS & SLOTS
- *********************************--------------------------------**************/
-
-/* Wrapper card for each court's scheduled slots */
-.court-schedule-card {
-    margin-bottom: 16px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 12px;
-    background: #fafafa;
+.court-cards-grid::-webkit-scrollbar {
+    width: 6px;
+}
+.court-cards-grid::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
 }
 
-.court-schedule-card:last-child {
-    margin-bottom: 0;
+.court-cards-grid.court-chosen {
+    grid-template-columns: 1fr;
+    max-height: none;
+    overflow-y: visible;
 }
 
-/* Court title row */
-.court-title {
-    margin: 0 0 10px 0;
-    font-size: 0.95rem;
-    color: #1e293b;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.court-cards-grid.court-chosen .court-select-card:not(.selected) {
+    display: none;
 }
 
-/* Active status text */
-.court-status-active {
-    font-size: 0.72rem;
-    color: #10b981;
-    font-weight: 600;
-}
-
-/* Availability message */
-.court-available-msg {
-    margin: 0;
-    font-size: 0.82rem;
-    color: #10b981;
-    font-weight: 500;
-}
-
-/* Header label for booked slots list */
-.booked-slots-header {
-    margin-bottom: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #64748b;
-    text-transform: uppercase;
-}
-
-/* Individual reserved slot item */
-.slot-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.82rem;
-    background: #ffffff;
-    padding: 6px 10px;
+/* Unselected court card image style */
+.court-select-card img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
     border-radius: 6px;
-    margin-bottom: 6px;
-    border-left: 3px solid #f59e0b;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-.slot-item:last-child {
-    margin-bottom: 0;
+/* Compact style for selected court card */
+.court-cards-grid.court-chosen .court-select-card.selected {
+    max-width: 100%;
+    display: flex;
+    flex-direction: column; /* Stacks image on top, title/price below */
+    align-items: stretch;
+    padding: 12px;
+    gap: 10px;
 }
 
-/* Status text formatting */
-.status-tag {
+.court-cards-grid.court-chosen .court-select-card.selected img {
+    width: 100%;       /* Fills the full width of the card */
+    height: 180px;     /* Rectangle image height */
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 0 !important;
+}
+
+.court-cards-grid.court-chosen .court-select-card.selected .court-card-title {
+    font-size: 1rem;
     font-weight: 600;
-    text-transform: capitalize;
-    font-size: 0.75rem;
+    margin-bottom: 2px;
 }
 
-.status-tag.confirmed {
-    color: #059669;
-}
-
-.status-tag.pending {
-    color: #d97706;
-}
-
-
-/*******************************************************************************
- * SECTION 5: RESPONSIVE MEDIA QUERIES
- *********************************--------------------------------**************/
-
-/* Collapse grid layout into a single column on tablets and mobile devices */
-@media (max-width: 992px) {
-    .booking-grid-layout {
-        grid-template-columns: 1fr;
-    }
+.court-cards-grid.court-chosen .court-select-card.selected .court-card-rate {
+    font-size: 0.9rem;
+    color: #2563eb;
 }

@@ -1,0 +1,183 @@
+/* ========================================================================= */
+/* COURT ZOOM & EXPAND BOOKING STYLES                                        */
+/* ========================================================================= */
+
+.court-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 6px;
+    transition: all 0.3s ease;
+}
+
+.court-select-card {
+    border: 2px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    background: #fff;
+    text-align: center;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.court-select-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+    border-color: #94a3b8;
+}
+
+.court-select-card img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.court-select-card input[type="radio"] {
+    display: none;
+}
+
+/* Zoom/Expand and Hide states when a court is chosen */
+.court-cards-grid.court-chosen .court-select-card:not(.selected) {
+    opacity: 0;
+    transform: scale(0.8);
+    pointer-events: none;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    overflow: hidden;
+}
+
+.court-cards-grid.court-chosen .court-select-card.selected {
+    transform: scale(1.02);
+    border-color: #0f172a;
+    background: #f8fafc;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+    cursor: default;
+}
+
+.court-card-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1e293b;
+}
+
+.court-card-rate {
+    font-size: 0.82rem;
+    color: #64748b;
+}
+
+/* Expandable Booking Details Container */
+#expandableBookingDetails {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease-in-out;
+}
+
+#expandableBookingDetails.expanded {
+    max-height: 1200px;
+    opacity: 1;
+    margin-top: 20px;
+}
+
+.change-court-btn {
+    background: none;
+    border: none;
+    color: #2563eb;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 6px;
+    display: inline-block;
+}
+
+.change-court-btn:hover {
+    text-decoration: underline;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================================================= */
+/* TIME SLOT PICKER GRID STYLES                                              */
+/* ========================================================================= */
+
+.time-slots-container {
+    margin-top: 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px;
+}
+
+.time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.time-slot-box {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 8px 6px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.time-slot-box:hover:not(.booked):not(.selected) {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.time-slot-box.selected {
+    background: #2563eb;
+    border-color: #1d4ed8;
+    color: #ffffff;
+}
+
+.time-slot-box.booked {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #991b1b;
+    cursor: not-allowed;
+}
+
+
+
+
+.court-select-card img {
+    width: 100%;
+    height: 350px; /* Change this value to your preferred height for the unselected view */
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+
+
+
+
+
+
+
+
+
