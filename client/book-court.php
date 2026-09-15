@@ -12,9 +12,9 @@ require_once __DIR__ . '/../includes/booking-functions.php';
 requireLogin();
 if (isAdmin()) { redirect('../admin/dashboard.php'); }
 
-$courts   = getAvailableCourts($pdo);
-$error    = null;
-$success  = null;
+$courts    = getAvailableCourts($pdo);
+$error     = null;
+$success   = null;
 $todayDate = date('Y-m-d');
 
 // =========================================================================
@@ -145,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $date    = clean($_POST['booking_date'] ?? '');
         $start   = clean($_POST['start_time'] ?? '');
         $end     = clean($_POST['end_time'] ?? '');
-        $players = 2; // Default players value since input is removed
+        $players = 2; 
         $notes   = clean($_POST['notes'] ?? '');
 
         if (!$courtId || !$date || !$start || !$end) {
@@ -175,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 
 <!-- Custom Notification Modal/Alert Box -->
-<div id="slotOccupiedModal" style="display:none; position:fixed; top:20px; right:20px; z-index:9999; background:#ef4444; color:#fff; padding:12px 20px; border-radius:8px; box-shadow:0 10px 15px -3px rgba(0,0,0,0.2); font-weight:500; font-size:0.9rem; transition:opacity 0.3s ease;">
+<div id="slotOccupiedModal" class="notification-modal">
     ⚠️ This time slot is already occupied/booked!
 </div>
 
@@ -189,68 +189,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post" id="privateBookingForm">
             <input type="hidden" name="action" value="private_booking">
 
-            <!-- Added ID for grid layout switching -->
             <div class="booking-grid-layout" id="bookingGridLayout">
                 
                 <!-- ======================================================= -->
                 <!-- LEFT COLUMN: COURT SELECTION & TODAY'S SCHEDULE        -->
                 <!-- ======================================================= -->
-                <div class="panel-card booking-form-panel">
-                    <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
+                <div class="left-column-wrapper">
+                    <div class="panel-card booking-form-panel booking-form-panel-flush">
+                        <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
 
-                    <div class="field">
-                        <label>Select Court</label>
-                        <select name="court_id" id="private_court_id" required style="display:none;">
-                            <option value="" data-rate="0">Select a court</option>
-                            <?php foreach ($courts as $c): ?>
-                                <option value="<?= $c['id'] ?>" data-rate="<?= $c['hourly_rate'] ?? 200 ?>">
-                                    <?= e($c['court_name']) ?> - &#8369;<?= number_format($c['hourly_rate'], 2) ?>/hr
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <div class="field field-flush">
+                            <label>Select Court</label>
+                            <select name="court_id" id="private_court_id" required class="hidden-select">
+                                <option value="" data-rate="0">Select a court</option>
+                                <?php foreach ($courts as $c): ?>
+                                    <option value="<?= $c['id'] ?>" data-rate="<?= $c['hourly_rate'] ?? 200 ?>">
+                                        <?= e($c['court_name']) ?> - &#8369;<?= number_format($c['hourly_rate'], 2) ?>/hr
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
 
-                        <!-- Visual Court Cards Grid -->
-                        <div class="court-cards-grid">
-                            <?php foreach ($courts as $c): ?>
-                                <label class="court-select-card" data-court-id="<?= $c['id'] ?>">
-                                    <input type="radio" name="court_id_radio" value="<?= $c['id'] ?>" data-rate="<?= $c['hourly_rate'] ?? 200 ?>">
-                                    <?php if (!empty($c['image']) && file_exists(__DIR__ . '/../uploads/' . $c['image'])): ?>
-                                        <img src="../uploads/<?= e($c['image']) ?>" alt="<?= e($c['court_name']) ?>">
-                                    <?php else: ?>
-                                        <div style="height:110px;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:12px;margin-bottom:8px;">No Image</div>
-                                    <?php endif; ?>
-                                    <div class="court-card-title"><?= e($c['court_name']) ?></div>
-                                    <div class="court-card-rate">&#8369;<?= number_format($c['hourly_rate'], 2) ?>/hr</div>
-                                </label>
-                            <?php endforeach; ?>
+                            <!-- Visual Court Cards Grid -->
+                            <div class="court-cards-grid">
+                                <?php foreach ($courts as $c): ?>
+                                    <label class="court-select-card" data-court-id="<?= $c['id'] ?>">
+                                        <input type="radio" name="court_id_radio" value="<?= $c['id'] ?>" data-rate="<?= $c['hourly_rate'] ?? 200 ?>">
+                                        <?php if (!empty($c['image']) && file_exists(__DIR__ . '/../uploads/' . $c['image'])): ?>
+                                            <img src="../uploads/<?= e($c['image']) ?>" alt="<?= e($c['court_name']) ?>">
+                                        <?php else: ?>
+                                            <div class="court-no-image">No Image</div>
+                                        <?php endif; ?>
+                                        <div class="court-card-title"><?= e($c['court_name']) ?></div>
+                                        <div class="court-card-rate">&#8369;<?= number_format($c['hourly_rate'], 2) ?>/hr</div>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                            <button type="button" id="changeCourtBtn" class="change-court-btn" style="display: none;">← Change Court Selection</button>
                         </div>
-                        <button type="button" id="changeCourtBtn" class="change-court-btn" style="display: none;">← Change Court Selection</button>
                     </div>
 
-                    <!-- TODAY'S SCHEDULE: Hidden by default until court is clicked -->
-                    <div class="schedule-panel" id="todayScheduleVertical" style="margin-top: 24px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
-                        <div class="schedule-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <h3 style="margin: 0; font-size: 1rem; color: #1e293b;">Today's Schedule</h3>
-                            <span class="schedule-date-badge" style="font-size: 0.8rem; color: #64748b; font-weight: 500;"><?= date('F j, Y', strtotime($todayDate)) ?></span>
+                    <!-- TODAY'S SCHEDULE -->
+                    <div class="schedule-panel" id="todayScheduleVertical">
+                        <div class="schedule-header">
+                            <h3 class="schedule-title-main">Today's Schedule</h3>
+                            <span class="schedule-date-badge" id="scheduleDateBadge"><?= date('F j, Y', strtotime($todayDate)) ?></span>
                         </div>
                         <?php if (empty($courtSchedule)): ?>
-                            <p class="schedule-empty-msg" style="font-size: 0.85rem; color: #64748b; margin: 0;">No courts currently active.</p>
+                            <p class="schedule-empty-msg">No courts currently active.</p>
                         <?php else: ?>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <div class="schedule-courts-grid">
                                 <?php foreach ($courtSchedule as $court): ?>
-                                    <div class="court-schedule-card" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px;">
-                                        <h4 class="court-title" style="display: flex; justify-content: space-between; align-items: center; margin: 0 0 8px 0; font-size: 0.85rem;">
-                                            <span style="color: #0f172a; font-weight: 600;"><?= htmlspecialchars($court['name']) ?></span>
-                                            <span class="court-status-active" style="font-size: 0.7rem; color: #16a34a;">● Active</span>
+                                    <div class="court-schedule-card">
+                                        <h4 class="court-title">
+                                            <span class="court-title-text"><?= htmlspecialchars($court['name']) ?></span>
+                                            <span class="court-status-active">● Active</span>
                                         </h4>
                                         <?php if (empty($court['bookings'])): ?>
-                                            <p class="court-available-msg" style="font-size: 0.75rem; color: #64748b; margin: 0;">✓ All slots available today</p>
+                                            <p class="court-available-msg">✓ All slots available today</p>
                                         <?php else: ?>
-                                            <div class="booked-slots-header" style="font-size: 0.75rem; color: #475569; font-weight: 500; margin-bottom: 4px;">Booked Slots:</div>
+                                            <div class="booked-slots-header">Booked Slots:</div>
                                             <?php foreach ($court['bookings'] as $slot): ?>
-                                                <div class="slot-item" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; margin-bottom: 3px;">
-                                                    <span style="color: #334155;"><?= $slot['time'] ?></span>
-                                                    <span class="status-tag <?= strtolower($slot['status']) ?>" style="font-size: 0.65rem; padding: 1px 6px; border-radius: 4px;"><?= $slot['status'] ?></span>
+                                                <div class="slot-item">
+                                                    <span class="slot-time-text"><?= $slot['time'] ?></span>
+                                                    <span class="status-tag <?= strtolower($slot['status']) ?>"><?= $slot['status'] ?></span>
                                                 </div>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
@@ -259,51 +260,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         <?php endif; ?>
                     </div>
-
-                    <!-- Back to Home Button -->
-                    <div style="margin-top: 16px;">
-                        <a href="../index.php" class="btn btn-outline" style="display: block; text-align: center; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; color: #334155; font-weight: 600; text-decoration: none; background: #ffffff;">Back to Home</a>
-                    </div>
-
                 </div>
 
                 <!-- ======================================================= -->
                 <!-- RIGHT COLUMN: BOOKING DETAILS & CONFIGURATION PANEL     -->
                 <!-- ======================================================= -->
-                <div class="panel-card" id="bookingConfigPanel">
-                    <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1.1rem; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">BOOKING CONFIGURATION</h3>
-                    
-                    <!-- Hidden inputs to hold selected start/end values for backend handling -->
-                    <input type="hidden" name="start_time" id="private_start_time" data-role="start-time" required>
-                    <input type="hidden" name="end_time" id="private_end_time" data-role="end-time" required>
+                <div class="right-column-wrapper">
+                    <div class="panel-card config-panel-card" id="bookingConfigPanel">
+                        <h3 class="config-panel-heading">BOOKING CONFIGURATION</h3>
+                        
+                        <input type="hidden" name="start_time" id="private_start_time" data-role="start-time" required>
+                        <input type="hidden" name="end_time" id="private_end_time" data-role="end-time" required>
 
-                    <div class="field" style="margin-bottom: 14px;">
-                        <label style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 4px; display: block;">Date</label>
-                        <input type="date" name="booking_date" id="booking_date" data-role="booking-date" required min="<?= date('Y-m-d') ?>" value="<?= date('Y-m-d') ?>" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem;">
-                    </div>
+                        <!-- Horizontal Calendar Date Picker Section -->
+                        <div class="date-picker-section">
+                            <div class="date-picker-header">
+                                <div>
+                                    <h3 id="displayDayName" class="selected-day-title">Day</h3>
+                                    <p id="displayFullDate" class="selected-date-sub">Date</p>
+                                </div>
+                                <div class="date-picker-actions">
+    <!-- Regular button with a click handler -->
+    <button type="button" id="jumpToDateTrigger" class="btn-jump-date" onclick="document.getElementById('booking_date').showPicker ? document.getElementById('booking_date').showPicker() : document.getElementById('booking_date').click();">
+        📅 Jump to date
+    </button>
+    <!-- Hidden actual input used to capture the date -->
+    <input type="date" id="booking_date" name="booking_date" data-role="booking-date" min="<?= date('Y-m-d') ?>" style="display: none;" onchange="handleDatePickerChange(this.value)">
+</div>
+                            </div>
 
-                    <!-- Available Time Slots Selection Boxes -->
-                    <div class="field time-slots-container" style="margin-bottom: 16px;">
-                        <label style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Available Time Slots (Click to Select Multiple)</label>
-                        <div id="timeSlotsGrid" class="time-slots-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; max-height: 250px; overflow-y: auto;">
-                            <span style="font-size: 0.8rem; color: #64748b; grid-column: 1 / -1;">Please pick a court and date to view time slots.</span>
+                            <div id="displayMonthYear" class="month-year-label">MONTH YEAR</div>
+
+                            <div class="days-strip-container" id="daysStrip">
+                                <!-- Dynamically rendered via JS -->
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="field" style="margin-bottom: 16px;">
-                        <label style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 4px; display: block;">Notes (optional)</label>
-                        <textarea name="notes" rows="2" placeholder="Paddle rental, coaching request, etc." style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; resize: vertical;"></textarea>
-                    </div>
 
-                    <div class="price-summary-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-                        <div class="price-summary-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <span class="price-title" style="font-weight: 600; color: #334155; font-size: 0.9rem;">Total Price:</span>
-                            <span class="price-value" id="privateTotalDisplay" style="font-weight: 700; color: #2563eb; font-size: 1.1rem;">₱0.00</span>
+                        <!-- Available Time Slots Selection Boxes -->
+                        <div class="field time-slots-container-wrapper">
+                            <label class="time-slots-label">Available Time Slots (Click to Select Multiple)</label>
+                            <div id="timeSlotsGrid" class="time-slots-grid">
+                                <span class="time-slots-placeholder">Please pick a court and date to view time slots.</span>
+                            </div>
                         </div>
-                        <small class="price-subtitle" id="privateDetailsDisplay" style="color: #64748b; font-size: 0.75rem;">Select court and time slot(s) to calculate total.</small>
+                        
+                        <div class="field field-notes-margin">
+                            <label class="notes-label">Notes (optional)</label>
+                            <textarea name="notes" rows="2" placeholder="Paddle rental, coaching request, etc." class="notes-textarea"></textarea>
+                        </div>
+
+                        <div class="price-summary-card">
+                            <div class="price-summary-row">
+                                <span class="price-title">Total Price:</span>
+                                <span class="price-value" id="privateTotalDisplay">&#8369;0.00</span>
+                            </div>
+                            <small class="price-subtitle" id="privateDetailsDisplay">Select court and time slot(s) to calculate total.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-solid btn-block submit-booking-btn">Submit Booking Request</button>
                     </div>
 
-                    <button type="submit" class="btn btn-solid btn-block" style="width: 100%; padding: 10px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Submit Booking Request</button>
+                    <!-- Back to Home Button -->
+                    <div class="back-to-home-wrapper">
+                        <a href="../index.php" class="btn btn-outline back-home-btn">Back to Home</a>
+                    </div>
                 </div>
 
             </div>
@@ -317,7 +337,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script>
 const GLOBAL_BOOKED_MAP = <?= json_encode($bookedSlotsMap); ?>;
 
+// Helper to format a Date object as YYYY-MM-DD in local time (prevents UTC timezone shift bugs)
+function formatDateLocal(d) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const dayNumStr = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${dayNumStr}`;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
+    const today = new Date();
+    renderDaysStrip(today);
+
     const courtCards = document.querySelectorAll('.court-select-card');
     const courtCardsGrid = document.querySelector('.court-cards-grid');
     const courtSelect = document.getElementById('private_court_id');
@@ -370,14 +401,9 @@ document.addEventListener('DOMContentLoaded', function () {
             slotBox.dataset.start = startHourStr;
             slotBox.dataset.end = endHourStr;
             slotBox.textContent = `${displayStart} - ${displayEnd}`;
-            slotBox.style.cssText = "background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 4px; text-align: center; font-size: 0.75rem; font-weight: 500; color: #334155; cursor: pointer; transition: all 0.2s ease;";
 
             if (isBooked) {
                 slotBox.classList.add('booked');
-                slotBox.style.background = "#fee2e2";
-                slotBox.style.borderColor = "#fca5a5";
-                slotBox.style.color = "#991b1b";
-                slotBox.style.cursor = "not-allowed";
                 slotBox.addEventListener('click', function() {
                     showOccupiedNotification();
                 });
@@ -398,19 +424,14 @@ document.addEventListener('DOMContentLoaded', function () {
         let currentSelected = allBoxes.filter(b => b.classList.contains('selected'));
 
         if (currentSelected.length === 0) {
-            // First click
             clickedBox.classList.add('selected');
         } else if (currentSelected.length === 1 && currentSelected[0] === clickedBox) {
-            // Unselect if clicking the only selected box
             clickedBox.classList.remove('selected');
         } else {
-            // Check if click forms a valid continuous range from the first selection
             const firstIndex = allBoxes.indexOf(currentSelected[0]);
             if (clickedIndex >= firstIndex) {
-                // Select all slots between firstIndex and clickedIndex
                 let hasBookedInBetween = false;
                 for (let i = firstIndex; i <= clickedIndex; i++) {
-                    // Check if any blocked/booked slots exist in between
                     if (allBoxes[i].classList.contains('booked')) {
                         hasBookedInBetween = true;
                         break;
@@ -427,26 +448,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     allBoxes[i].classList.add('selected');
                 }
             } else {
-                // Reset and select new starting point
                 allBoxes.forEach(b => b.classList.remove('selected'));
                 clickedBox.classList.add('selected');
             }
         }
 
-        // Re-highlight styling
         allBoxes.forEach(b => {
             if (b.classList.contains('selected')) {
-                b.style.background = '#2563eb';
-                b.style.borderColor = '#1d4ed8';
-                b.style.color = '#ffffff';
+                b.classList.add('is-selected-state');
             } else {
-                b.style.background = '#ffffff';
-                b.style.borderColor = '#cbd5e1';
-                b.style.color = '#334155';
+                b.classList.remove('is-selected-state');
             }
         });
 
-        // Update hidden start and end time inputs based on continuous selection span
         const updatedSelected = allBoxes.filter(b => b.classList.contains('selected'));
         if (updatedSelected.length > 0) {
             startTimeInput.value = updatedSelected[0].dataset.start;
@@ -470,7 +484,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     radio.checked = true;
                     courtSelect.value = radio.value;
                     
-                    // Reveal hidden panels and shift layout to 2-columns
                     if (bookingGridLayout) bookingGridLayout.classList.add('court-selected');
                     if (courtCardsGrid) courtCardsGrid.classList.add('court-chosen');
                     if (bookingConfigPanel) bookingConfigPanel.classList.add('visible');
@@ -489,7 +502,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 courtCards.forEach(c => { const r = c.querySelector('input[type="radio"]'); if (r) r.checked = false; });
                 courtSelect.value = '';
                 
-                // Hide panels back and reset full-width layout
                 if (bookingGridLayout) bookingGridLayout.classList.remove('court-selected');
                 if (courtCardsGrid) courtCardsGrid.classList.remove('court-chosen');
                 if (bookingConfigPanel) bookingConfigPanel.classList.remove('visible');
@@ -539,6 +551,85 @@ document.addEventListener('DOMContentLoaded', function () {
         endTimeInputEl.addEventListener('change', calculatePrivateTotal);
     }
 });
+
+// Dynamic Horizontal Date Strip Functions
+function renderDaysStrip(selectedDate) {
+    const strip = document.getElementById("daysStrip");
+    if (!strip) return;
+    strip.innerHTML = "";
+
+    const startDate = new Date();
+    
+    // Calculate the last day of the current month to make sure we show all days
+    const year = startDate.getFullYear();
+    const month = startDate.getMonth();
+    const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+    
+    // Find how many days are left in the month from today, or loop for a full month view (e.g., up to the last day)
+    // Here we calculate the exact number of days remaining in the month so all of them display:
+    const daysInCurrentMonthRemaining = lastDayOfMonth - startDate.getDate() + 1;
+    
+    for (let i = 0; i < daysInCurrentMonthRemaining; i++) {
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + i);
+
+        const dYear = d.getFullYear();
+        const dMonth = String(d.getMonth() + 1).padStart(2, '0');
+        const dayNumStr = String(d.getDate()).padStart(2, '0');
+        const dateStr = `${dYear}-${dMonth}-${dayNumStr}`;
+
+        const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+        const dayNum = d.getDate();
+
+        const isSelected = dateStr === formatDateLocal(selectedDate);
+
+        const card = document.createElement("div");
+        card.className = `day-card ${isSelected ? 'active' : ''}`;
+        
+        card.onclick = () => selectDate(d, dateStr);
+
+        card.innerHTML = `
+            <span class="day-name">${dayName}</span>
+            <span class="day-number">${dayNum}</span>
+        `;
+
+        strip.appendChild(card);
+    }
+
+    updateHeaderDisplays(selectedDate);
+}
+
+function selectDate(dateObj, dateStr) {
+    const dateInput = document.getElementById("booking_date");
+    if (dateInput) {
+        dateInput.value = dateStr;
+        dateInput.dispatchEvent(new Event('change'));
+    }
+    renderDaysStrip(dateObj);
+}
+
+function handleDatePickerChange(val) {
+    if (!val) return;
+    const parts = val.split('-');
+    const selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
+    renderDaysStrip(selectedDate);
+}
+
+function updateHeaderDisplays(d) {
+    const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+    const fullDate = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    const monthYear = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+
+    const dayNameEl = document.getElementById("displayDayName");
+    const fullDateEl = document.getElementById("displayFullDate");
+    const monthYearEl = document.getElementById("displayMonthYear");
+    const badgeEl = document.getElementById("scheduleDateBadge");
+
+    if (dayNameEl) dayNameEl.innerText = dayName;
+    if (fullDateEl) fullDateEl.innerText = fullDate;
+    if (monthYearEl) monthYearEl.innerText = monthYear;
+    if (badgeEl) badgeEl.innerText = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
 </script>
 </body>
 </html>

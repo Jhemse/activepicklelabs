@@ -45,13 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if ($msg = getFlash('success')): ?><div class="alert alert-success"><?= e($msg) ?></div><?php endif; ?>
 
         <div class="panel-card" style="max-width:560px">
-            <p><strong>Status:</strong> <span class="<?= statusBadgeClass($booking['status']) ?>"><?= ucfirst($booking['status']) ?></span></p>
+           <p><strong>Status:</strong> <span class="<?= statusBadgeClass($booking['status']) ?>"><?= ucfirst($booking['status']) ?></span></p>
             <p><strong>Client:</strong> <?= e($booking['full_name']) ?> (<?= e($booking['email']) ?>, <?= e($booking['phone']) ?>)</p>
             <p><strong>Court:</strong> <?= e($booking['court_name']) ?> - &#8369;<?= number_format($booking['hourly_rate'], 2) ?>/hr</p>
             <p><strong>Type:</strong> <?= $booking['booking_type'] === 'open_play' ? 'Open Play' : 'Private Rental' ?></p>
             <p><strong>Date:</strong> <?= formatDate($booking['booking_date']) ?></p>
             <p><strong>Time:</strong> <?= formatTime($booking['start_time']) ?> - <?= formatTime($booking['end_time']) ?></p>
-            <p><strong>Players:</strong> <?= (int) $booking['players'] ?></p>
+            <p><strong>Total Price:</strong> &#8369;<?= number_format($booking['total_price'], 2) ?></p>
             <p><strong>Notes:</strong> <?= e($booking['notes']) ?: '—' ?></p>
 
             <div class="actions-inline" style="margin-top:20px">

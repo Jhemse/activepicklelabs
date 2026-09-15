@@ -24,11 +24,14 @@
     display: block; /* Ensures elements render fully */
 }
 
-/* Hidden by default on page load - styled for vertical alignment */
+/* Hidden by default on page load - styled for vertical alignment & scrollable */
 #todayScheduleVertical {
     display: none;
     opacity: 0;
     transition: opacity 0.3s ease;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
 #todayScheduleVertical.visible {
@@ -36,14 +39,24 @@
     opacity: 1;
 }
 
+/* Custom scrollbar for Today's Schedule */
+#todayScheduleVertical::-webkit-scrollbar {
+    width: 6px;
+}
+#todayScheduleVertical::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
 /* Court selection grid management (Max 3 columns per row with vertical scroll) */
 .court-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    max-height: 520px;
-    overflow-y: auto;
-    padding-right: 4px;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    grid-auto-flow: row !important;
+    gap: 16px !important;
+    max-height: 520px !important;
+    overflow-y: auto !important;
+    padding-right: 4px !important;
 }
 
 .court-cards-grid::-webkit-scrollbar {
@@ -55,13 +68,13 @@
 }
 
 .court-cards-grid.court-chosen {
-    grid-template-columns: 1fr;
-    max-height: none;
-    overflow-y: visible;
+    grid-template-columns: 1fr !important;
+    max-height: none !important;
+    overflow-y: visible !important;
 }
 
 .court-cards-grid.court-chosen .court-select-card:not(.selected) {
-    display: none;
+    display: none !important;
 }
 
 /* Unselected court card image style */
@@ -83,8 +96,8 @@
 }
 
 .court-cards-grid.court-chosen .court-select-card.selected img {
-    width: 100%;       /* Fills the full width of the card */
-    height: 180px;     /* Rectangle image height */
+    width: 100%;      /* Fills the full width of the card */
+    height: 180px;    /* Rectangle image height */
     object-fit: cover;
     border-radius: 6px;
     margin-bottom: 0 !important;
@@ -99,4 +112,384 @@
 .court-cards-grid.court-chosen .court-select-card.selected .court-card-rate {
     font-size: 0.9rem;
     color: #2563eb;
+}
+
+/* =========================================================================
+   ADDITIONAL STYLES FOR EXTRACTED HTML CLASSES
+   ========================================================================= */
+
+/* Notification Modal */
+.notification-modal {
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: #ef4444;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: opacity 0.3s ease;
+}
+
+/* Form Layout & General Spacing helpers */
+.booking-form-panel-flush {
+    margin-bottom: 0 !important;
+}
+
+.field-flush {
+    margin-bottom: 0 !important;
+}
+
+.hidden-select {
+    display: none;
+}
+
+.hidden-input {
+    display: none;
+}
+
+.court-no-image {
+    height: 110px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+/* Today's Schedule Vertical Panel */
+.schedule-panel {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.schedule-title-main {
+    margin: 0;
+    font-size: 1rem;
+    color: #1e293b;
+}
+
+.schedule-date-badge {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.schedule-empty-msg {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.schedule-courts-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.court-schedule-card {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.court-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 0 8px 0;
+    font-size: 0.85rem;
+}
+
+.court-title-text {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.court-status-active {
+    font-size: 0.7rem;
+    color: #16a34a;
+}
+
+.court-available-msg {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.booked-slots-header {
+    font-size: 0.75rem;
+    color: #475569;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.slot-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    margin-bottom: 3px;
+}
+
+.slot-time-text {
+    color: #334155;
+}
+
+/* Config Panel Heading */
+.config-panel-heading {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+    color: #1e293b;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 10px;
+}
+
+/* Date Picker Section */
+.date-picker-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 16px;
+}
+
+.date-picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.selected-day-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.selected-date-sub {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 2px 0 0 0;
+}
+
+.btn-jump-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #e0f2fe;
+    color: #0284c7;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.month-year-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #475569;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.days-strip-container {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scroll-behavior: smooth;
+}
+
+/* Dynamic Day Cards */
+.day-card {
+    min-width: 48px;
+    padding: 6px 4px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-user-select: none;
+    user-select: none;
+    color: #0f172a;
+}
+
+.day-card.active {
+    background: #0ea5e9;
+    border-color: #0ea5e9;
+    color: #ffffff;
+}
+
+.day-card .day-name {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 2px;
+    color: #64748b;
+}
+
+.day-card.active .day-name {
+    color: #e0f2fe;
+}
+
+.day-card .day-number {
+    font-size: 1rem;
+    font-weight: 700;
+    display: block;
+}
+
+/* Time Slots & Form Elements */
+.time-slots-container-wrapper {
+    margin-bottom: 16px;
+}
+
+.time-slots-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.time-slots-placeholder {
+    font-size: 0.8rem;
+    color: #64748b;
+    grid-column: 1 / -1;
+}
+
+.time-slot-box {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 6px 4px;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.time-slot-box.booked {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #991b1b;
+    cursor: not-allowed;
+}
+
+.time-slot-box.is-selected-state {
+    background: #2563eb;
+    border-color: #1d4ed8;
+    color: #ffffff;
+}
+
+.field-notes-margin {
+    margin-bottom: 16px;
+}
+
+.notes-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.notes-textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    resize: vertical;
+}
+
+.price-summary-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.price-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.price-title {
+    font-weight: 600;
+    color: #334155;
+    font-size: 0.9rem;
+}
+
+.price-value {
+    font-weight: 700;
+    color: #2563eb;
+    font-size: 1.1rem;
+}
+
+.price-subtitle {
+    color: #64748b;
+    font-size: 0.75rem;
+}
+
+.submit-booking-btn {
+    width: 100%;
+    padding: 10px;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.back-to-home-wrapper {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.back-home-btn {
+    padding: 10px 20px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #334155;
+    font-weight: 600;
+    text-decoration: none;
+    background: #ffffff;
 }
