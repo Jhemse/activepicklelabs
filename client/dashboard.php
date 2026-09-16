@@ -5,21 +5,6 @@
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
-
-// =========================================================================
-// UPCOMING OPEN PLAY SESSIONS QUERY
-// =========================================================================
-// PURPOSE: Fetch all upcoming, admin-hosted open play sessions that are active,
-// filtering out past sessions and calculating real-time confirmed player counts.
-$upcomingOpenPlay = $pdo->query("
-    SELECT ops.*, c.court_name, 
-           (SELECT COALESCE(SUM(num_players), 0) FROM open_play_registrations WHERE session_id = ops.id AND status = 'confirmed') as confirmed_players 
-    FROM open_play_sessions ops 
-    JOIN courts c ON ops.court_id = c.id 
-    WHERE (ops.session_date > CURDATE() OR (ops.session_date = CURDATE() AND ops.end_time > CURTIME())) 
-      AND ops.status = 'open'
-    ORDER BY ops.session_date ASC, ops.start_time ASC
-")->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -49,11 +34,11 @@ $upcomingOpenPlay = $pdo->query("
                 <!-- ======================================================= -->
                 <!-- LEFT CONTROL PANEL                                      -->
                 <!-- ======================================================= -->
-                <div class="left-controls">
-                    <a href="book-court.php" class="btn-nav-primary">Book My Own Court</a>
+                <div class="left-controls" style="grid-column: 1 / -1; max-width: 500px; margin: 0 auto; text-align: center;">
+                    <a href="book-court.php" class="btn-nav-primary" style="display: block; margin-bottom: 20px;">Book My Own Court</a>
                     
                     <!-- Decorative NVZ (Non-Volley Zone) Court Graphic -->
-                    <div class="court-graphic-card">
+                    <div class="court-graphic-card" style="display: inline-block;">
                         <svg width="200" height="100" viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <rect width="200" height="100" fill="#0F172A"/>
                             <rect x="5" y="5" width="190" height="90" stroke="#FFFFFF" stroke-width="2"/>
@@ -65,51 +50,6 @@ $upcomingOpenPlay = $pdo->query("
                             <text x="115" y="53" fill="#0F172A" font-size="10" font-weight="bold">NVZ</text>
                         </svg>
                     </div>
-                </div>
-
-                <!-- ======================================================= -->
-                <!-- RIGHT SIDE: DYNAMIC PROJECTION OF OPEN PLAY SESSIONS    -->
-                <!-- ======================================================= -->
-                <div class="right-display">
-                    <div class="upcoming-title">UPCOMING COURTS</div>
-
-                    <?php if (empty($upcomingOpenPlay)): ?>
-                        <!-- FALLBACK: Displayed when no active sessions exist -->
-                        <div class="open-play-card">
-                            <span class="session-details session-empty">No open play sessions currently scheduled by admin.</span>
-                        </div>
-                    <?php else: ?>
-                        <?php 
-                        $displayIndex = 1;
-                        foreach ($upcomingOpenPlay as $session): 
-                            // Calculate remaining available slots for the session
-                            $remainingSlots = $session['max_slots'] - $session['confirmed_players'];
-                            if ($remainingSlots <= 0) continue; // Skip iteration if session is completely full
-
-                            // Check if current server time has passed session end date/time
-                            $sessionEndTimestamp = strtotime($session['session_date'] . ' ' . $session['end_time']);
-                            $isPassed = time() > $sessionEndTimestamp;
-                        ?>
-                            <div class="open-play-card">
-                                <!-- Session sequential counter index -->
-                                <span class="session-num"><?= $displayIndex++ ?></span>
-                                
-                                <!-- Session formatting and details display -->
-                                <div class="session-details">
-                                    <?= date('M j, Y', strtotime($session['session_date'])) ?>, 
-                                    <?= date('g:i A', strtotime($session['start_time'])) ?>-<?= date('g:i A', strtotime($session['end_time'])) ?> 
-                                    | <span class="court-tag"><?= e($session['court_name']) ?></span>
-                                </div>
-                                
-                                <!-- Conditional action button based on session timeline status -->
-                                <?php if ($isPassed): ?>
-                                    <button class="btn-disabled" disabled>Unavailable</button>
-                                <?php else: ?>
-                                    <a href="book-court.php?open_play_id=<?= $session['id'] ?>" class="btn-join-lime">Join Open Play</a>
-                                <?php endif; ?>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
                 </div>
                 
             </div>

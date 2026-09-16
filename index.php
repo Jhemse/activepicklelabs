@@ -22,16 +22,6 @@ try {
 } catch (Exception $e) {
     // Handle exception gracefully
 }
-
-// Fetch upcoming admin-hosted open play sessions (same data query as client/dashboard.php)
-$upcomingOpenPlay = $pdo->query("
-    SELECT ops.*, c.court_name, 
-           (SELECT COALESCE(SUM(num_players), 0) FROM open_play_registrations WHERE session_id = ops.id AND status = 'confirmed') as confirmed_players 
-    FROM open_play_sessions ops 
-    JOIN courts c ON ops.court_id = c.id 
-    WHERE ops.session_date >= CURDATE() AND ops.status = 'open'
-    ORDER BY ops.session_date ASC, ops.start_time ASC
-")->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -44,7 +34,7 @@ $upcomingOpenPlay = $pdo->query("
 <body>
 
 <!-- ========================================================================= -->
-<!-- HERO SECTION & PUBLIC NAVIGATION                                        -->
+<!-- HERO SECTION & PUBLIC NAVIGATION                                          -->
 <!-- ========================================================================= -->
 <div class="hero" id="home">
     <?php include __DIR__ . '/components/public-navbar.php'; ?>
@@ -155,15 +145,16 @@ $upcomingOpenPlay = $pdo->query("
 <!-- COURTS & BOOKING SECTION                                                  -->
 <!-- ========================================================================= -->
 <section class="section" id="booking">
-    <div class="booking-panel">
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px">
+    <div class="booking-panel" style="max-width: 800px; margin: 0 auto; text-align: center;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:16px; margin-bottom: 30px;">
             <h2>Courts &amp; Booking</h2>
-            <p class="muted" style="max-width:360px;margin:0">Be part of the club and let us show you the true nature of being active. Active Picklelabs will serve!</p>
+            <p class="muted" style="max-width:480px;margin:0">Be part of the club and let us show you the true nature of being active. Active Picklelabs will serve!</p>
         </div>
-        <div class="booking-grid">
-            <div class="booking-actions">
-                <a class="btn btn-navy" href="<?= isLoggedIn() ? 'client/book-court.php' : 'register.php' ?>">Book My Own Court</a>
-                <div class="court-diagram">
+        
+        <div style="display: flex; justify-content: center;">
+            <div class="booking-actions" style="width: 100%; max-width: 450px;">
+                <a class="btn btn-navy" href="<?= isLoggedIn() ? 'client/book-court.php' : 'register.php' ?>" style="display: block; margin-bottom: 25px;">Book My Own Court</a>
+                <div class="court-diagram" style="margin: 0 auto;">
                     <!-- Left Court Half -->
                     <div class="court-left">
                         <div class="service-box top"></div>
@@ -180,31 +171,6 @@ $upcomingOpenPlay = $pdo->query("
                         <div class="service-box top"></div>
                         <div class="service-box bottom"></div>
                     </div>
-                </div>
-            </div>
-            <div>
-                <h3 style="margin-bottom:16px">UPCOMING COURTS</h3>
-                <div class="upcoming-list">
-                    <?php if (empty($upcomingOpenPlay)): ?>
-                        <div class="upcoming-item">
-                            <span class="info muted">No open play sessions currently scheduled by admin.</span>
-                        </div>
-                    <?php else: ?>
-                        <?php foreach ($upcomingOpenPlay as $index => $session): 
-                            $remainingSlots = $session['max_slots'] - $session['confirmed_players'];
-                            if ($remainingSlots <= 0) continue;
-                        ?>
-                            <div class="upcoming-item">
-                                <span class="num"><?= $index + 1 ?></span>
-                                <span class="info">
-                                    <strong>
-                                        <?= date('M j, Y', strtotime($session['session_date'])) ?>, 
-                                        <?= date('g:i A', strtotime($session['start_time'])) ?>–<?= date('g:i A', strtotime($session['end_time'])) ?>
-                                    </strong> | <?= e($session['court_name']) ?>
-                                </span>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -243,7 +209,7 @@ $upcomingOpenPlay = $pdo->query("
 </section>
 
 <!-- ========================================================================= -->
-<!-- FOOTER & SCRIPT INCLUSIONS                                              -->
+<!-- FOOTER & SCRIPT INCLUSIONS                                                -->
 <!-- ========================================================================= -->
 <?php include __DIR__ . '/components/footer.php'; ?>
 

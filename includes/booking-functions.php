@@ -74,7 +74,7 @@ function deleteService($pdo, $id) {
 
 /* -------------------- Bookings -------------------- */
 
-/** Check whether a court is already booked or overlaps with private bookings and open-play sessions. */
+/** Check whether a court is already booked or overlaps with existing bookings. */
 function isCourtTaken(PDO $pdo, int $courtId, string $date, string $start, string $end, ?int $excludeId = null): bool
 {
     // PURPOSE: Check for time overlaps against existing confirmed or pending private bookings
@@ -90,18 +90,8 @@ function isCourtTaken(PDO $pdo, int $courtId, string $date, string $start, strin
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
-    if ((int) $stmt->fetchColumn() > 0) {
-        return true;
-    }
-
-    // PURPOSE: Also check for time overlaps against active open-play sessions scheduled on this court
-    $openPlaySql = 'SELECT COUNT(*) FROM open_play_sessions
-                    WHERE court_id = ? AND session_date = ? AND status = "open"
-                    AND start_time < ? AND end_time > ?';
-    $stmtOpen = $pdo->prepare($openPlaySql);
-    $stmtOpen->execute([$courtId, $date, $end, $start]);
     
-    return (int) $stmtOpen->fetchColumn() > 0;
+    return (int) $stmt->fetchColumn() > 0;
 }
 
 /** Create a booking. Returns [success(bool), message(string)]. */
@@ -123,7 +113,7 @@ function createBooking(
         return [false, 'End time must be after start time.'];
     }
     if (isCourtTaken($pdo, $courtId, $date, $start, $end)) {
-        return [false, 'This time slot conflicts with an existing booking or scheduled open-play session. Please choose another time.'];
+        return [false, 'This time slot conflicts with an existing booking. Please choose another time.'];
     }
 
     // 1. Fetch court rates
@@ -137,24 +127,17 @@ function createBooking(
 
     $hourlyRate = (float) ($court['hourly_rate'] ?? $court['price_per_hour'] ?? 0);
 
-    // 2. Calculate Total Price based on Booking Type
-    if ($type === 'open_play') {
-        // Open Play: Rate per player × number of players
-        $pricePerPlayer = (float) ($court['price_per_player'] ?? 150.00); 
-        $totalPrice = $players * $pricePerPlayer;
-    } else {
-        // Private Booking: Duration in hours × hourly rate
-        $startTime = new DateTime($start);
-        $endTime   = new DateTime($end);
-        $interval  = $startTime->diff($endTime);
-        $hours     = $interval->h + ($interval->i / 60);
+    // 2. Calculate Total Price for Private Booking (Duration in hours × hourly rate)
+    $startTime = new DateTime($start);
+    $endTime   = new DateTime($end);
+    $interval  = $startTime->diff($endTime);
+    $hours     = $interval->h + ($interval->i / 60);
 
-        if ($hours <= 0) {
-            return [false, 'Invalid booking duration.'];
-        }
-
-        $totalPrice = $hours * $hourlyRate;
+    if ($hours <= 0) {
+        return [false, 'Invalid booking duration.'];
     }
+
+    $totalPrice = $hours * $hourlyRate;
 
     // 3. Save to database including total_price
     $stmt = $pdo->prepare(
@@ -176,22 +159,6 @@ function getBookingsForUser(PDO $pdo, int $userId): array
          ORDER BY b.booking_date DESC, b.start_time DESC'
     );
     $stmt->execute([$userId]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function getUpcomingOpenPlay(PDO $pdo, int $limit = 6): array
-{
-    $stmt = $pdo->prepare(
-        'SELECT b.*, c.court_name, u.full_name FROM bookings b
-         JOIN courts c ON c.id = b.court_id
-         JOIN users u ON u.id = b.user_id
-         WHERE b.booking_type = "open_play" AND b.status NOT IN ("cancelled", "pending_cancellation")
-           AND b.booking_date >= CURDATE()
-         ORDER BY b.booking_date ASC, b.start_time ASC
-         LIMIT ?'
-    );
-    $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-    $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -217,6 +184,7 @@ function cancelBooking(PDO $pdo, int $bookingId, int $userId): void
     $stmt = $pdo->prepare('UPDATE bookings SET status = "pending_cancellation" WHERE id = ? AND user_id = ?');
     $stmt->execute([$bookingId, $userId]);
 }
+
 /* -------------------- Users (admin "clients" list) -------------------- */
 
 function getAllClients(PDO $pdo): array

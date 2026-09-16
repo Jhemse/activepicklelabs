@@ -112,7 +112,6 @@ $current = basename($_SERVER['SCRIPT_NAME']);
         <nav class="dash-nav">
             <a href="dashboard.php" class="<?= $current === 'dashboard.php' ? 'active' : '' ?>">Dashboard</a>
             <a href="requests.php" class="<?= $current === 'requests.php' ? 'active' : '' ?>">Booking Requests</a>
-            <a href="open-play.php" class="<?= $current === 'open-play.php' ? 'active' : '' ?>">Open Play Sessions</a>
             <a href="courts.php" class="<?= $current === 'courts.php' ? 'active' : '' ?>">Courts</a>
             <a href="services.php" class="<?= $current === 'services.php' ? 'active' : '' ?>">Services</a>
             <a href="clients.php" class="<?= $current === 'clients.php' ? 'active' : '' ?>">Clients</a>
@@ -192,7 +191,7 @@ $current = basename($_SERVER['SCRIPT_NAME']);
 <?php 
 /*******************************************************************************
  * SECTION 7: POPUP MODAL FOR ADDING / EDITING SERVICES
- *********************************--------------------------------**************/
+ *******************************************************************************/
 ?>
 <div class="modal-overlay" id="serviceModalOverlay">
     <div class="glass-modal">
@@ -235,7 +234,7 @@ $current = basename($_SERVER['SCRIPT_NAME']);
 <?php 
 /*******************************************************************************
  * SECTION 8: JAVASCRIPT TO HANDLE MODAL OPEN/CLOSE & EDIT FORM POPULATION
- *********************************--------------------------------**************/
+ *******************************************************************************/
 ?>
 <script>
 const serviceModalOverlay = document.getElementById('serviceModalOverlay');

@@ -17,19 +17,13 @@ if (isAdmin()) { redirect('../admin/dashboard.php'); }
 // =========================================================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    // --- SCENARIO A: Delete Booking/Registration Record ---
+    // --- SCENARIO A: Delete Booking Record ---
     if (isset($_POST['action']) && $_POST['action'] === 'delete_booking') {
-        // Split the combined delete_target string back into ID and type
         list($parsedId, $deleteType) = explode('|', $_POST['delete_target']);
         $deleteId   = (int) $parsedId;
-        $deleteType = $deleteType ?? 'private';
 
-        // 1. First, check if the booking/registration is confirmed before allowing deletion
-        if ($deleteType === 'open_play') {
-            $checkStmt = $pdo->prepare("SELECT status FROM open_play_registrations WHERE id = :id AND user_id = :user_id");
-        } else {
-            $checkStmt = $pdo->prepare("SELECT status FROM bookings WHERE id = :id AND user_id = :user_id");
-        }
+        // 1. First, check if the booking is confirmed before allowing deletion
+        $checkStmt = $pdo->prepare("SELECT status FROM bookings WHERE id = :id AND user_id = :user_id");
         $checkStmt->execute(['id' => $deleteId, 'user_id' => $_SESSION['user_id']]);
         $record = $checkStmt->fetch();
 
@@ -37,13 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($record && $record['status'] === 'confirmed') {
             setFlash('error', 'Confirmed bookings cannot be deleted.');
         } else {
-            if ($deleteType === 'open_play') {
-                $stmt = $pdo->prepare("DELETE FROM open_play_registrations WHERE id = :id AND user_id = :user_id");
-                $stmt->execute(['id' => $deleteId, 'user_id' => $_SESSION['user_id']]);
-            } else {
-                $stmt = $pdo->prepare("DELETE FROM bookings WHERE id = :id AND user_id = :user_id");
-                $stmt->execute(['id' => $deleteId, 'user_id' => $_SESSION['user_id']]);
-            }
+            $stmt = $pdo->prepare("DELETE FROM bookings WHERE id = :id AND user_id = :user_id");
+            $stmt->execute(['id' => $deleteId, 'user_id' => $_SESSION['user_id']]);
             setFlash('success', 'Booking deleted successfully.');
         }
 
@@ -53,17 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // --- SCENARIO B: Request Cancellation (Pending Admin Approval) ---
     if (isset($_POST['cancel_id'])) {
         $cancelId   = (int) $_POST['cancel_id'];
-        $cancelType = $_POST['cancel_type'] ?? 'private';
 
-        if ($cancelType === 'open_play') {
-            // Set status to 'pending_cancellation' so it stays on schedules until admin confirms
-            $stmt = $pdo->prepare("UPDATE open_play_registrations SET status = 'pending_cancellation' WHERE id = :id AND user_id = :user_id");
-            $stmt->execute(['id' => $cancelId, 'user_id' => $_SESSION['user_id']]);
-        } else {
-            // Set private booking status to 'pending_cancellation' instead of immediate cancellation
-            $stmt = $pdo->prepare("UPDATE bookings SET status = 'pending_cancellation' WHERE id = :id AND user_id = :user_id");
-            $stmt->execute(['id' => $cancelId, 'user_id' => $_SESSION['user_id']]);
-        }
+        // Set private booking status to 'pending_cancellation' instead of immediate cancellation
+        $stmt = $pdo->prepare("UPDATE bookings SET status = 'pending_cancellation' WHERE id = :id AND user_id = :user_id");
+        $stmt->execute(['id' => $cancelId, 'user_id' => $_SESSION['user_id']]);
 
         setFlash('success', 'Cancellation request submitted. Awaiting admin approval.');
         redirect('my-bookings.php');
@@ -71,81 +53,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // =========================================================================
-// FILTER & DATA FETCHING (COMBINED PRIVATE + OPEN PLAY)
+// FILTER & DATA FETCHING (PRIVATE COURT BOOKINGS)
 // =========================================================================
 
 // Capture active tab filter parameter (all, confirmed, pending, cancelled)
 $activeTab = strtolower(trim($_GET['status'] ?? 'all'));
 $user_id   = $_SESSION['user_id'];
 
-// PURPOSE: Construct a unified SQL UNION query to merge standard private bookings 
-// and open play registrations into a single stream for the user history table.
+// PURPOSE: Construct SQL query for user private court bookings
 $query = "
     SELECT 
-        id,
-        user_name,
-        booking_date,
-        start_time,
-        end_time,
-        court_name,
-        booking_type,
-        status,
-        players_or_notes,
-        total_amount,
-        created_at
-    FROM (
-        -- Subquery 1: Standard Private Court Bookings
-        SELECT 
-            b.id AS id,
-            u.full_name AS user_name,
-            b.booking_date AS booking_date,
-            b.start_time AS start_time,
-            b.end_time AS end_time,
-            c.court_name AS court_name,
-            COALESCE(b.booking_type, 'private') AS booking_type,
-            b.status AS status,
-            CONCAT('Players: ', COALESCE(b.players, 2), IF(b.notes IS NOT NULL AND b.notes != '', CONCAT(' | Notes: ', b.notes), '')) AS players_or_notes,
-            COALESCE(b.total_price, 0.00) AS total_amount,
-            b.created_at AS created_at
-        FROM bookings b
-        JOIN courts c ON b.court_id = c.id
-        JOIN users u ON b.user_id = u.id
-        WHERE b.user_id = :user_id1
-
-        UNION ALL
-
-        -- Subquery 2: Admin-Hosted Open Play Sessions Registrations
-        SELECT 
-            opr.id AS id,
-            u.full_name AS user_name,
-            ops.session_date AS booking_date,
-            ops.start_time AS start_time,
-            ops.end_time AS end_time,
-            c.court_name AS court_name,
-            'open_play' AS booking_type,
-            opr.status AS status,
-            CONCAT('Registered Players: ', opr.num_players, ' | Session Slots: ', ops.max_slots) AS players_or_notes,
-            ROUND(opr.num_players * ops.price_per_player, 2) AS total_amount,
-            opr.created_at AS created_at
-        FROM open_play_registrations opr
-        JOIN open_play_sessions ops ON opr.session_id = ops.id
-        JOIN courts c ON ops.court_id = c.id
-        JOIN users u ON opr.user_id = u.id
-        WHERE opr.user_id = :user_id2
-    ) AS combined_bookings
+        b.id AS id,
+        u.full_name AS user_name,
+        b.booking_date AS booking_date,
+        b.start_time AS start_time,
+        b.end_time AS end_time,
+        c.court_name AS court_name,
+        COALESCE(b.booking_type, 'private') AS booking_type,
+        b.status AS status,
+        CONCAT('Players: ', COALESCE(b.players, 2), IF(b.notes IS NOT NULL AND b.notes != '', CONCAT(' | Notes: ', b.notes), '')) AS players_or_notes,
+        COALESCE(b.total_price, 0.00) AS total_amount,
+        b.created_at AS created_at
+    FROM bookings b
+    JOIN courts c ON b.court_id = c.id
+    JOIN users u ON b.user_id = u.id
+    WHERE b.user_id = :user_id
 ";
 
 // Append status filter condition if a specific tab is selected
 if (in_array($activeTab, ['confirmed', 'pending', 'cancelled'])) {
-    $query .= " WHERE status = :active_tab ";
+    $query .= " AND b.status = :active_tab ";
 }
-$query .= " ORDER BY booking_date DESC, start_time DESC";
+$query .= " ORDER BY b.booking_date DESC, b.start_time DESC";
 
 // Execute prepared statement with bound parameters
 $stmt = $pdo->prepare($query);
 $params = [
-    'user_id1' => $user_id,
-    'user_id2' => $user_id
+    'user_id' => $user_id
 ];
 if (in_array($activeTab, ['confirmed', 'pending', 'cancelled'])) {
     $params['active_tab'] = $activeTab;
@@ -205,8 +149,8 @@ $bookings = $stmt->fetchAll();
                                 <td><?= formatTime($b['start_time']) ?> - <?= formatTime($b['end_time']) ?></td>
                                 <td><?= e($b['court_name']) ?></td>
                                 <td>
-                                    <span class="badge-type <?= $b['booking_type'] ?>">
-                                        <?= $b['booking_type'] === 'open_play' ? 'Open Play' : 'Private' ?>
+                                    <span class="badge-type private">
+                                        Private
                                     </span>
                                 </td>
 
@@ -225,37 +169,36 @@ $bookings = $stmt->fetchAll();
                             </td>
 
                                 <td>
-                                   <div class="action-cell">
-    <!-- VIEW DETAILS MODAL TRIGGER BUTTON -->
-    <button type="button" 
-            class="btn btn-ghost btn-sm btn-view-details" 
-            data-id="<?= $b['id'] ?>"
-            data-customer="<?= e($b['user_name'] ?? $_SESSION['user_name'] ?? 'Customer') ?>"
-            data-date="<?= formatDate($b['booking_date']) ?>"
-            data-time="<?= formatTime($b['start_time']) ?> - <?= formatTime($b['end_time']) ?>"
-            data-court="<?= e($b['court_name']) ?>"
-            data-type="<?= $b['booking_type'] === 'open_play' ? 'Open Play' : 'Private Court' ?>"
-            data-status="<?= ucwords(str_replace('_', ' ', $b['status'])) ?>"
-            data-info="<?= e($b['players_or_notes'] ?? 'None') ?>"
-            data-amount="₱<?= number_format($b['total_amount'] ?? 0, 2) ?>">
-        View
-    </button>
+                                    <div class="action-cell">
+                                        <!-- VIEW DETAILS MODAL TRIGGER BUTTON -->
+                                        <button type="button" 
+                                                class="btn btn-ghost btn-sm btn-view-details" 
+                                                data-id="<?= $b['id'] ?>"
+                                                data-customer="<?= e($b['user_name'] ?? $_SESSION['user_name'] ?? 'Customer') ?>"
+                                                data-date="<?= formatDate($b['booking_date']) ?>"
+                                                data-time="<?= formatTime($b['start_time']) ?> - <?= formatTime($b['end_time']) ?>"
+                                                data-court="<?= e($b['court_name']) ?>"
+                                                data-type="Private Court"
+                                                data-status="<?= ucwords(str_replace('_', ' ', $b['status'])) ?>"
+                                                data-info="<?= e($b['players_or_notes'] ?? 'None') ?>"
+                                                data-amount="₱<?= number_format($b['total_amount'] ?? 0, 2) ?>">
+                                            View
+                                        </button>
 
-    <!-- CONDITIONAL ACTIONS: Cancel if confirmed, Delete if pending or cancelled -->
-    <?php if ($b['status'] === 'confirmed'): ?>
-        <form method="post" style="display:inline">
-            <input type="hidden" name="cancel_id" value="<?= $b['id'] ?>">
-            <input type="hidden" name="cancel_type" value="<?= e($b['booking_type']) ?>">
-            <button class="btn btn-ghost btn-sm btn-cancel-action" data-confirm="Request cancellation for this booking?" type="submit">Cancel</button>
-        </form>
-    <?php elseif ($b['status'] === 'pending' || $b['status'] === 'cancelled'): ?>
-        <form method="post" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this transaction?');">
-            <input type="hidden" name="action" value="delete_booking">
-            <input type="hidden" name="delete_target" value="<?= $b['id'] . '|' . e($b['booking_type']) ?>">
-            <button class="btn btn-ghost btn-sm" style="color: #ef4444;" type="submit">Delete</button>
-        </form>
-    <?php endif; ?>
-</div>
+                                        <!-- CONDITIONAL ACTIONS: Cancel if confirmed, Delete if pending or cancelled -->
+                                        <?php if ($b['status'] === 'confirmed'): ?>
+                                            <form method="post" style="display:inline">
+                                                <input type="hidden" name="cancel_id" value="<?= $b['id'] ?>">
+                                                <input type="hidden" name="cancel_type" value="private">
+                                                <button class="btn btn-ghost btn-sm btn-cancel-action" data-confirm="Request cancellation for this booking?" type="submit">Cancel</button>
+                                            </form>
+                                        <?php elseif ($b['status'] === 'pending' || $b['status'] === 'cancelled'): ?>
+                                            <form method="post" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this transaction?');">
+                                                <input type="hidden" name="action" value="delete_booking">
+                                                <input type="hidden" name="delete_target" value="<?= $b['id'] . '|private' ?>">
+                                                <button class="btn btn-ghost btn-sm" style="color: #ef4444;" type="submit">Delete</button>
+                                            </form>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>

@@ -18,17 +18,12 @@ $success   = null;
 $todayDate = date('Y-m-d');
 
 // =========================================================================
-// FETCH ALL BOOKINGS & SESSIONS FOR JAVASCRIPT TIME-SLOT VALIDATION
+// FETCH ALL BOOKINGS FOR JAVASCRIPT TIME-SLOT VALIDATION
 // =========================================================================
 $stmtAllBookings = $pdo->prepare("
     SELECT court_id, booking_date AS slot_date, start_time, end_time, status 
     FROM bookings 
     WHERE status IN ('confirmed', 'pending', 'pending_cancellation')
-    UNION
-    SELECT c.id AS court_id, ops.session_date AS slot_date, ops.start_time, ops.end_time, 'confirmed' AS status
-    FROM open_play_sessions ops
-    JOIN courts c ON ops.court_id = c.id
-    WHERE ops.status = 'open'
 ");
 $stmtAllBookings->execute();
 $rawBookingsData = $stmtAllBookings->fetchAll(PDO::FETCH_ASSOC);
@@ -59,29 +54,7 @@ $stmtPrivate = $pdo->prepare("
 $stmtPrivate->execute([$todayDate]);
 $privateBookings = $stmtPrivate->fetchAll(PDO::FETCH_ASSOC);
 
-$stmtOpenPlay = $pdo->prepare("
-    SELECT c.id AS court_id, ops.start_time, ops.end_time, 'confirmed' AS status
-    FROM open_play_sessions ops
-    JOIN courts c ON ops.court_id = c.id
-    WHERE ops.session_date = ? AND ops.status = 'open'
-");
-$stmtOpenPlay->execute([$todayDate]);
-$openPlaySessions = $stmtOpenPlay->fetchAll(PDO::FETCH_ASSOC);
-
-$stmtOpenPlayCancels = $pdo->prepare("
-    SELECT c.id AS court_id, ops.start_time, ops.end_time, opr.status 
-    FROM open_play_registrations opr
-    JOIN open_play_sessions ops ON opr.session_id = ops.id
-    JOIN courts c ON ops.court_id = c.id
-    WHERE ops.session_date = ? AND opr.status = 'pending_cancellation' AND opr.user_id = ?
-");
-$stmtOpenPlayCancels->execute([$todayDate, $_SESSION['user_id']]);
-$openPlayCancels = $stmtOpenPlayCancels->fetchAll(PDO::FETCH_ASSOC);
-
-$openPlaySessions = array_merge($openPlaySessions, $openPlayCancels);
-$allTodaySlots = array_merge($privateBookings, $openPlaySessions);
-
-foreach ($allTodaySlots as $row) {
+foreach ($privateBookings as $row) {
     $cId = $row['court_id'];
     if (isset($courtSchedule[$cId]) && $row['start_time']) {
         $timeFormatted = date('g:i A', strtotime($row['start_time'])) . ' - ' . date('g:i A', strtotime($row['end_time']));
@@ -102,62 +75,24 @@ foreach ($courtSchedule as $cId => &$data) {
 }
 unset($data);
 
-// Open play join query handling
-$openPlayId = (int) ($_GET['open_play_id'] ?? 0);
-$openPlaySession = null;
-if ($openPlayId > 0) {
-    $stmt = $pdo->prepare("SELECT ops.*, c.court_name,
-                          (SELECT COALESCE(SUM(num_players), 0) FROM open_play_registrations WHERE session_id = ops.id AND status = 'confirmed') as confirmed_players 
-                          FROM open_play_sessions ops 
-                          JOIN courts c ON ops.court_id = c.id 
-                          WHERE ops.id = ? AND ops.status = 'open'");
-    $stmt->execute([$openPlayId]);
-    $openPlaySession = $stmt->fetch();
-}
-
 // Form Submission handling
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? 'private_booking';
+    $courtId = (int) ($_POST['court_id'] ?? 0);
+    $date    = clean($_POST['booking_date'] ?? '');
+    $start   = clean($_POST['start_time'] ?? '');
+    $end     = clean($_POST['end_time'] ?? '');
+    $players = 2; 
+    $notes   = clean($_POST['notes'] ?? '');
 
-    if ($action === 'join_open_play') {
-        $sessionId  = (int) $_POST['session_id'];
-        $numPlayers = max(1, (int) $_POST['num_players']);
-        $unitPrice  = (float) $_POST['price_per_player'];
-        $totalPrice = $numPlayers * $unitPrice;
-
-        $sessStmt = $pdo->prepare("SELECT max_slots, 
-                                  (SELECT COALESCE(SUM(num_players), 0) FROM open_play_registrations WHERE session_id = ? AND status = 'confirmed') as booked 
-                                  FROM open_play_sessions WHERE id = ?");
-        $sessStmt->execute([$sessionId, $sessionId]);
-        $sessData = $sessStmt->fetch();
-
-        if ($sessData && ($sessData['booked'] + $numPlayers) <= $sessData['max_slots']) {
-            $regStmt = $pdo->prepare("INSERT INTO open_play_registrations (session_id, user_id, num_players, total_price, status) VALUES (?, ?, ?, ?, 'pending')");
-            $regStmt->execute([$sessionId, $_SESSION['user_id'], $numPlayers, $totalPrice]);
-
-            setFlash('success', 'Open Play join request submitted! Awaiting admin approval.');
+    if (!$courtId || !$date || !$start || !$end) {
+        $error = 'Please fill in every required field.';
+    } else {
+        [$ok, $message] = createBooking($pdo, $_SESSION['user_id'], $courtId, 'private', $date, $start, $end, $players, $notes);
+        if ($ok) {
+            setFlash('success', $message);
             redirect('my-bookings.php');
         } else {
-            $error = 'Not enough slots available for this Open Play session.';
-        }
-    } else {
-        $courtId = (int) ($_POST['court_id'] ?? 0);
-        $date    = clean($_POST['booking_date'] ?? '');
-        $start   = clean($_POST['start_time'] ?? '');
-        $end     = clean($_POST['end_time'] ?? '');
-        $players = 2; 
-        $notes   = clean($_POST['notes'] ?? '');
-
-        if (!$courtId || !$date || !$start || !$end) {
-            $error = 'Please fill in every required field.';
-        } else {
-            [$ok, $message] = createBooking($pdo, $_SESSION['user_id'], $courtId, 'private', $date, $start, $end, $players, $notes);
-            if ($ok) {
-                setFlash('success', $message);
-                redirect('my-bookings.php');
-            } else {
-                $error = $message;
-            }
+            $error = $message;
         }
     }
 }
@@ -167,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= $openPlaySession ? 'Join Open Play' : 'Book a Court' ?> - Active Picklelabs</title>
+<title>Book a Court - Active Picklelabs</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
 <link rel="stylesheet" href="../assets/css/book-court.css">
 <link rel="stylesheet" href="../assets/css/book-court-zoom.css">
@@ -183,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php include __DIR__ . '/../components/client-sidebar.php'; ?>
     <main class="dash-main">
         <div class="dash-topbar">
-            <h1><?= $openPlaySession ? 'Join Open Play Session' : 'Book a Private Court' ?></h1>
+            <h1>Book a Private Court</h1>
         </div>
 
         <form method="post" id="privateBookingForm">
@@ -192,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="booking-grid-layout" id="bookingGridLayout">
                 
                 <!-- ======================================================= -->
-                <!-- LEFT COLUMN: COURT SELECTION & TODAY'S SCHEDULE        -->
+                <!-- LEFT COLUMN: COURT SELECTION & TODAY'S SCHEDULE         -->
                 <!-- ======================================================= -->
                 <div class="left-column-wrapper">
                     <div class="panel-card booking-form-panel booking-form-panel-flush">
@@ -280,13 +215,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <p id="displayFullDate" class="selected-date-sub">Date</p>
                                 </div>
                                 <div class="date-picker-actions">
-    <!-- Regular button with a click handler -->
-    <button type="button" id="jumpToDateTrigger" class="btn-jump-date" onclick="document.getElementById('booking_date').showPicker ? document.getElementById('booking_date').showPicker() : document.getElementById('booking_date').click();">
-        📅 Jump to date
-    </button>
-    <!-- Hidden actual input used to capture the date -->
-    <input type="date" id="booking_date" name="booking_date" data-role="booking-date" min="<?= date('Y-m-d') ?>" style="display: none;" onchange="handleDatePickerChange(this.value)">
-</div>
+                                    <button type="button" id="jumpToDateTrigger" class="btn-jump-date" onclick="document.getElementById('booking_date').showPicker ? document.getElementById('booking_date').showPicker() : document.getElementById('booking_date').click();">
+                                        📅 Jump to date
+                                    </button>
+                                    <input type="date" id="booking_date" name="booking_date" data-role="booking-date" min="<?= date('Y-m-d') ?>" style="display: none;" onchange="handleDatePickerChange(this.value)">
+                                </div>
                             </div>
 
                             <div id="displayMonthYear" class="month-year-label">MONTH YEAR</div>
@@ -337,7 +270,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script>
 const GLOBAL_BOOKED_MAP = <?= json_encode($bookedSlotsMap); ?>;
 
-// Helper to format a Date object as YYYY-MM-DD in local time (prevents UTC timezone shift bugs)
 function formatDateLocal(d) {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -552,21 +484,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-// Dynamic Horizontal Date Strip Functions
 function renderDaysStrip(selectedDate) {
     const strip = document.getElementById("daysStrip");
     if (!strip) return;
     strip.innerHTML = "";
 
     const startDate = new Date();
-    
-    // Calculate the last day of the current month to make sure we show all days
     const year = startDate.getFullYear();
     const month = startDate.getMonth();
     const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
-    
-    // Find how many days are left in the month from today, or loop for a full month view (e.g., up to the last day)
-    // Here we calculate the exact number of days remaining in the month so all of them display:
     const daysInCurrentMonthRemaining = lastDayOfMonth - startDate.getDate() + 1;
     
     for (let i = 0; i < daysInCurrentMonthRemaining; i++) {
@@ -585,7 +511,6 @@ function renderDaysStrip(selectedDate) {
 
         const card = document.createElement("div");
         card.className = `day-card ${isSelected ? 'active' : ''}`;
-        
         card.onclick = () => selectDate(d, dateStr);
 
         card.innerHTML = `
